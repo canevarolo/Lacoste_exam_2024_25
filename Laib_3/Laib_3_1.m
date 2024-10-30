@@ -1,3 +1,5 @@
+```matlab
+
 % In an infinite wall of thickness δ = 50 mm (see Fig. 1) with thermal conductivity k = 5 W/(m·K),
 % there is a volumetric heat generation of [q''' = 500 kW/m³. Surface A is adiabatic, while surface B
 % is maintained at a constant temperature T₀ = 300 K.
