@@ -61,3 +61,12 @@ flow_out = abs(hin*(TT(1)-Tw))*pi*Din;
 err1 = abs(flow_out- flow_in)/abs(flow_in);
 
 fprintf('The error is %.5f', err1)
+
+figure(2)
+flowbar = bar([flow_in,flow_out])
+colors = [0 1 0; 1 0 0];
+flowbar.FaceColor = 'flat';
+flowbar.CData = colors;
+title('Flow comparison');
+ylabel('Flow [W]');
+set(gca,'xticklabels',{'Flow in' 'Flow out'});
