@@ -25,8 +25,8 @@ clc
 
 lltot = 50e-2; % m
 ll = lltot/2;
-prof = 10e-2; % m
-spess = 2e-2; % m
+depth = 10e-2; % m
+thick = 2e-2; % m
 L0 = 56e-2; % m
 roelzero = 1.75e-8; % Ohm*m
 
@@ -44,8 +44,8 @@ dz = 5e-5;
 zz = (0:dz:ll)';
 Nz = length(zz);
 
-Abase = spess*prof;
-As = 2*lltot*(spess+prof);
+Abase = thick*depth;
+As = 2*lltot*(thick+depth);
 Vol = lltot*Abase;
 
 qvol = II^2*lltot*roel(zz)./(Abase*Vol); % W/m^3
@@ -81,4 +81,4 @@ ylabel('Temperature [K]')
 % Power balance
 
 flow_in = trapz(zz,qvol)*Abase
-flow_out = trapz(zz,abs(hh*(The-TT)))*(2*(spess+prof))+abs(kk/dz*(TT(end)-TT(end-1)))*Abase
+flow_out = trapz(zz,abs(hh*(The-TT)))*(2*(thick+depth))+abs(kk/dz*(TT(end)-TT(end-1)))*Abase
