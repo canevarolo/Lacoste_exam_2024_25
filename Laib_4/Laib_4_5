@@ -1,0 +1,84 @@
+% A rectangular copper bar (length L = 50 cm, depth b = 10 cm, thickness a = 2 cm,
+% thermal conductivity k = 350 W/m/K, density ρ = 8900 kg/m³, specific heat cp = 350 J/kg/K)
+% is immersed (and cooled) in a bath of liquid helium at THe = 4.5 K
+% (heat transfer coefficient h = 500 W/m²/K), while the two boundaries are
+% maintained at a constant temperature T = THe.
+% The origin of the reference axes is assumed to be at the center of the bar.
+% A current of I = 7 kA flows through the bar, whose electrical resistivity follows
+% a spatial cosine profile with the form:  
+
+% roel = roelzero.*[cos(pi*z./L0)].^2; % Ohm*m 
+
+% where roelzero = 1.75e-8 Ohm*m and L0 = 56 cm.
+% Assuming the bar can be treated as a one-dimensional object along the z-direction,
+% write a program that numerically computes the one-dimensional temperature distribution
+% along the bar.
+
+% Laib 4, exercise 5
+% Simone Canevarolo
+% S269893
+% 7/11/2024
+
+clear all
+close all
+clc
+
+lltot = 50e-2; % m
+ll = lltot/2;
+prof = 10e-2; % m
+spess = 2e-2; % m
+L0 = 56e-2; % m
+roelzero = 1.75e-8; % Ohm*m
+
+kk = 350; % W/m/K
+rovol = 8900; % kg/m^3
+cp = 350; % J/kg/K
+The = 4.5; % K
+hh = 500; % W/m^2/K
+
+II = 7e3; % A
+
+roel = @(z) roelzero.*[cos(pi*z./L0)].^2; % Ohm*m
+
+dz = 5e-5;
+zz = (0:dz:ll)';
+Nz = length(zz);
+
+Abase = spess*prof;
+As = 2*lltot*(spess+prof);
+Vol = lltot*Abase;
+
+qvol = II^2*lltot*roel(zz)./(Abase*Vol); % W/m^3
+
+aa = hh*As/Vol*dz^2/kk;
+
+sub_diag = ones(Nz,1);
+main_diag = (-2-aa)*ones(Nz,1);
+sup_diag = sub_diag;
+
+Band = [[sub_diag(2:end);0],main_diag,[0;sup_diag(1:end-1)]];
+
+AA = spdiags(Band,-1:1,Nz,Nz);
+
+bb = -qvol*dz^2./kk-The*aa;
+
+AA(1,1) = 1;
+AA(1,2) = -1;
+bb(1) = 0;
+
+AA(end,end-1) = 0;
+AA(end,end) = 1;
+bb(end) = The;
+
+TT = AA\bb;
+
+figure(1)
+plot(zz*1e2,TT,'r*','LineWidth',2)
+title('Temperature along the bar')
+xlabel('Length [cm]')
+ylabel('Temperature [K]')
+
+% Power balance
+
+flow_in = trapz(zz,qvol)*Abase
+flow_out = trapz(zz,abs(hh*(The-TT)))*(2*(spess+prof))+abs(kk/dz*(TT(end)-TT(end-1)))*Abase
