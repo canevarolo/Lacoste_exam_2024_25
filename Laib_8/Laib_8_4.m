@@ -101,9 +101,6 @@ TT = Tin;
 Tm = Tin;
 Energy = rovol_cu*Vol*cp_cu*(TT-Tin);
 
-err = 1;
-toll = 1e-5;
-dt = 1; % s
 time = 0; % s
 ii = 1;
 
@@ -111,7 +108,7 @@ TTvett_cu(1) = TT;
 
 aa = dt*As*hh/rovol_cu/cp_cu/Vol;
 
-while Energy < 0.9*Emax && ii<1000
+while Energy < 0.9*Emax && ii < 1000
 
     ii = ii+1;
     time = time+dt;
