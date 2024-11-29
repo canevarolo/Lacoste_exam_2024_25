@@ -73,7 +73,7 @@ bb(end) = The;
 TT = AA\bb;
 
 figure(1)
-plot(zz*1e2,TT,'r*','LineWidth',2)
+plot(zz*1e2,TT,'r','LineWidth',2)
 title('Temperature along the bar')
 xlabel('Length [cm]')
 ylabel('Temperature [K]')
