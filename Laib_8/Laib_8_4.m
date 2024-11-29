@@ -42,7 +42,8 @@ Bi = hh*(dd/2)/kk_all;
 
 % Now, we can start to code since the condition is satisfied.
 % We consider the max of energy that can be stored as if the aluminium
-% balls could have the same temperature as the air flow
+% balls could have the same temperature as the air flow.
+% The code will be solved in Forward Euler (FE), explicit method
 
 Emax_theory_all = @(T) rovol_all*Vol*cp_all*(T-Tin);
 Emax = Emax_theory_all(Tgas);
@@ -90,6 +91,9 @@ Time_all = time;
 
 %% COPPER
 
+% This time, the problem will be solved using Backward Euler (BE), implicit
+% method
+
 rovol_cu = 8900; % Kg/m^3
 cp_cu = 400; % W/m/K
 % same dimentions
@@ -108,12 +112,12 @@ TTvett_cu(1) = TT;
 
 aa = dt*As*hh/rovol_cu/cp_cu/Vol;
 
-while Energy < 0.9*Emax && ii < 1000
+while Energy < 0.9*Emax && ii<1000
 
     ii = ii+1;
     time = time+dt;
 
-    TT = Tm+aa*(-Tm+Tgas);
+    TT = (Tm+aa*Tgas)/(1+aa);
 
     TTvett_cu(ii) = TT;
 
