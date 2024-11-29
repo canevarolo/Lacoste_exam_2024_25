@@ -32,8 +32,8 @@ Tgas = 300+273; % K
 Tin = 25+273; % k
 hh = 75; % W/m^2/K
 
-As = 4*pi*dd^2/4; % area for heat exchange
-Vol = 4/3*pi*(dd/2)^3; % volume of the sphere
+As = 4*pi*dd^2/4; % area for heat exchange, m^2
+Vol = 4/3*pi*(dd/2)^3; % volume of the sphere, m^3
 
 % Biot number (should be Bi<0.1 in order to use the zero-dimensional
 % problem)
