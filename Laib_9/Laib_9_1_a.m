@@ -17,7 +17,7 @@
 %
 % at various time instants (t = 20 s, 40 s, 60 s, 80 s, 100 s).
 
-% Laib 9, exercise 1
+% Laib 9, exercise 1 A
 % Simone Canevarolo
 % S269893
 % 3/12/2024
