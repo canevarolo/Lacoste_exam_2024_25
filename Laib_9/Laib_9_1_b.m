@@ -22,7 +22,7 @@ tend = 100; % time to end, s
 
 dxvett = [0.01 0.005]; % length step, m
 
-dtvett=[0.001 0.002 0.005 0.01 0.02 0.05 0.1 0.2 0.5 1 2 5 10 20];
+dtvett = [0.001 0.002 0.005 0.01 0.02 0.05 0.1 0.2 0.5 1 2 5 10 20]; % time step, s
 
 T = @(x) T0+50*sin(pi*x/ll); % temperature function
 
