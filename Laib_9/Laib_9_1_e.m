@@ -1,4 +1,4 @@
-% Datas from 9_1_a
+% Datas from Laib_9_1_a
 
 % Evaluate the temperature evolution over time using the Crank-Nicolson
 % method and verify its temporal convergence by fixing Δx = 0.001 m.
