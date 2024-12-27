@@ -35,7 +35,7 @@ xmed = round(Nx/2)+1;
 Tmidvett = T0*ones(Nx,1);
 Tm = T0*ones(Nx,1);
 
-qv = II^2*roel*ll/(dd^2/4*pi); % W/m^3
+qv = II^2*roel/(pi*dd^2/4)^2; % W/m^3
 cp = kk/roel/alpha; % J/Kg/K
 
 edge = load('Tleft.dat');
@@ -77,6 +77,7 @@ end
 
 figure(1)
 plot(tt,Tmidvett-T0)
-
-
-% DA TERMINARE!
+xlabel('Time [s]')
+ylabel('Temperature [K]')
+title('Temperature vs time in the middle of the bar')
+legend('Temperature','Location','best')
