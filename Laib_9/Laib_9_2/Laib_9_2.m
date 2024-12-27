@@ -1,3 +1,5 @@
+'''matlab
+
 % An electric current of 50 A flows through an electrical conductor
 % (laterally insulated, with a length L = 1 m, resistivity r = 1.75 × 10⁻⁸ Ω·m,
 % diffusivity a = 11 × 10⁻⁵ m²/s, thermal conductivity k = 350 W/(m·K)),
