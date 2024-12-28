@@ -28,11 +28,75 @@ II = 50; % A
 nn = 1.2;
 E0 = 1e-5; % V/m
 
-% E = @(IC) E0*(II/IC)^nn;
+Abase = dd^2/4*pi;
+
 % IC = @(T) 50-T^2;
+% E = @(IC) E0*(II/IC)^nn;
 
-Efunz = @(T) E0*(II/(50-T^2))^nn;
+qv = @(T) (E0*(II/(50-T.^2)).^nn).*II/Abase;
 
-tend = 1500; % s
+tend = 15000; % s
+
+dx = 1e-3; % m
+xx = (0:dx:ll)';
+Nx = length(xx);
+
+dt = 1; % s
+tt = (0:dt:tend);
+Nt = length(tt);
+
+aa = alpha*dt/dx^2;
+
+Tm = T0*ones(Nx,1);
+Tmiddle = Tm;
+Tmed = T0;
+
+qv_vett = qv(Tmed)*ones(Nt,1);
+
+sub_diag = -aa*ones(Nx,1);
+main_diag = (1+2*aa)*ones(Nx,1);
+sup_diag = sub_diag;
+
+Band = [[sub_diag(2:end);0], main_diag, [0;sup_diag(1:end-1)]];
+
+AA = spdiags(Band,-1:1,Nx,Nx);
 
 
+for ii = 2:Nt
+
+    bb = Tm+qv(Tmed)*dt*alpha/kk;
+
+    qv_vett(ii) = qv(Tmed);
+
+    AA(1,1) = 1;
+    AA(1,2) = 0;
+    bb(1) = T0;
+    
+    AA(end,end-1) = 0;
+    AA(end,end) = 1;
+    bb(end) = T0;
+    
+    TT = AA\bb;
+    
+    Tmed = TT(round(Nx/2)+1);
+    
+    Tmiddle(ii) = Tmed;
+    
+    Tm = TT;
+
+end
+
+
+figure(1)
+plot(tt,qv_vett,'b','LineWidth',2)
+title('Volumetric heat power vs time')
+xlabel('time [s]')
+ylabel('Volumetric power [W/m^3]')
+grid on
+
+figure(2)
+plot(tt,Tmiddle,'r','LineWidth',2)
+title('Temperature in the middle point of the bar vs time')
+xlabel('time [s]')
+ylabel('Temperature [K]')
+grid on
