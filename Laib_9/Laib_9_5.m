@@ -18,4 +18,18 @@ clear all
 close all
 clc
 
-% TERMINARE
+dd = 12e-3; % m
+kk = 40; % W/m/K
+rovol = 7800; % kg/m^3
+cp = 600; % J/kg/K
+
+T0 = 1150; % K
+Tend = 400; % K
+hh = 20; % W/m^2/K
+
+% Temperature of the air over time (t)
+T_air = @(t) 325+0.0375*t;
+
+
+
+
