@@ -85,3 +85,7 @@ title('Temperature of the steel balls and air vs time')
 xlabel('time [s]')
 ylabel('Temperature [K]')
 legend('Steel balls', ' Air', 'Location','best')
+
+
+
+%% TERMINARE CON FORWARD EULER E L'ANALISI 0-DIMENSIONALE!
