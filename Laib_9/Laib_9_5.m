@@ -12,13 +12,15 @@
 % Laib 9, exercise 5
 % Simone Canevarolo
 % S269893
-% 28/12/2024
+% 30/12/2024
 
 clear all
 close all
 clc
 
-dd = 12e-3; % m
+dd_tot = 12e-3; % m
+dd = dd_tot/2;
+
 kk = 40; % W/m/K
 rovol = 7800; % kg/m^3
 cp = 600; % J/kg/K
@@ -30,6 +32,50 @@ hh = 20; % W/m^2/K
 % Temperature of the air over time (t)
 T_air = @(t) 325+0.0375*t;
 
+dx = 1e-4; % m
+xx = (0:dx:dd)';
+Nx = length(xx);
 
+dt = 1; % s
+tt = (0:dt:10000);
+Nt = length(tt);
 
+Tm = T0*ones(Nx,1);
+Tmedia = T0*ones(Nt,1);
 
+aa = kk*dt/rovol/cp/dx^2;
+
+for ii = 2:Nt
+
+    sub_diag = -aa*ones(Nx,1);
+    main_diag = (1+2*aa)*ones(Nx,1);
+    sup_diag = sub_diag;
+    
+    Band = [[sub_diag(2:end);0], main_diag, [0;sup_diag(1:end-1)]];
+    
+    AA = spdiags(Band,-1:1,Nx,Nx);
+    
+    bb = Tm;
+
+    Taria = T_air(ii);
+    
+    AA(1,1) = kk/dx+hh;
+    AA(1,2) = -kk/dx;
+    bb(1) = hh*Taria;
+    
+    AA(end,end-1) = -1;
+    AA(end,end) = 1;
+    bb(end) = 0;
+    
+    TT = AA\bb;
+    
+    Tmedia(ii) = mean(TT);
+    
+    Tm = TT;
+
+end
+
+figure(1)
+plot(tt,Tmedia)
+hold on
+plot(tt,T_air(tt))
