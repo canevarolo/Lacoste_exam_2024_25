@@ -37,13 +37,15 @@ xx = (0:dx:dd)';
 Nx = length(xx);
 
 dt = 1; % s
-tt = (0:dt:10000);
+tt = (0:dt:5000);
 Nt = length(tt);
 
 Tm = T0*ones(Nx,1);
 Tmedia = T0*ones(Nt,1);
 
 aa = kk*dt/rovol/cp/dx^2;
+
+% Solve the problem using BE method (implicit)
 
 for ii = 2:Nt
 
@@ -76,6 +78,10 @@ for ii = 2:Nt
 end
 
 figure(1)
-plot(tt,Tmedia)
+plot(tt,Tmedia,'LineWidth',2)
 hold on
-plot(tt,T_air(tt))
+plot(tt,T_air(tt), 'LineWidth',2)
+title('Temperature of the steel balls and air vs time')
+xlabel('time [s]')
+ylabel('Temperature [K]')
+legend('Steel balls', ' Air', 'Location','best')
