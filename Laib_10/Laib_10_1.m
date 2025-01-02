@@ -13,3 +13,84 @@ clear all
 close all
 clc
 
+ll = 1; % m
+Tlato = 500; % K
+Tair = 300; % K
+hh = 10; % W/m^2/K
+
+rovol = 1920; % Kg/m^3
+cond = 0.72; % W/m/K
+cp = 835; % J/kg/K
+
+dx = 5e-2; % m
+dy = dx;
+
+xx = (0:dx:ll)';
+yy = xx;
+
+Nx = length(xx);
+Ny = Nx;
+Ntot = Nx*Ny;
+
+[xmat,ymat] = meshgrid(xx,yy);
+
+AA = sparse([],[],[], Ntot, Ntot, 5*Ntot);
+
+bb = zeros(Ntot,1);
+
+for ii = 2:Nx-1
+    for jj = 2:Ny-1
+
+        kk = Nx*(jj-1)+ii;
+        AA(kk,kk-Nx) = 1/dy^2;
+        AA(kk,kk-1) = 1/dx^2;
+        AA(kk,kk) = -2*(1/dx^2+1/dy^2);
+        AA(kk,kk+1) = 1/dx^2;
+        AA(kk,kk+Nx) = 1/dy^2;
+
+    end
+end
+
+
+% West, mantained temperature (Dirichlet condition)
+kk = 1:Nx;
+AA(kk,:) = 0;
+AA(kk,kk) = eye(length(kk));
+bb(kk) = Tlato;
+
+% South, mantained temperature (Dirichlet condition)
+kk = Nx:Nx:Ntot;
+AA(kk,:) = 0;
+AA(kk,kk) = eye(length(kk));
+bb(kk) = Tlato;
+
+% East, mantained temperature (Dirichlet condition)
+kk = Nx*(Ny-1)+1:Ntot;
+AA(kk,:) = 0;
+AA(kk,kk) = eye(length(kk));
+bb(kk) = Tlato;
+
+% North, air convection (Robin condition)
+ii = 1;
+for jj = 2:Ny-1
+
+    kk = Nx*(jj-1)+ii;
+    AA(kk,kk-Nx) = cond/2/dy^2;
+    AA(kk,kk) = -(cond*(1/dx^2+1/dy^2)+hh/dx);
+    AA(kk,kk+1) = cond/dx^2;
+    AA(kk,kk+Nx) = cond/2/dy^2;
+    bb(kk) = -Tair/cond*hh/dx;
+
+end
+
+
+TT = AA\bb;
+TTT = reshape(TT,Nx,Ny);
+
+figure(1)
+surf(xmat',ymat',TTT)
+colorbar
+xlabel('x [m]')
+ylabel('y [m]')
+zlabel('Temperature [K]')
+title('Temperature on the section')
