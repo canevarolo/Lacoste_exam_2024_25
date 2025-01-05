@@ -1,4 +1,4 @@
-% % Consider the cross-section of a steel beam, shown in Figure 1.
+% Consider the cross-section of a steel beam, shown in Figure 1.
 
 % a. Compute and represent the temperature map under steady-state conditions, 
 % with the boundary conditions depicted in the figure and Tin = 20 °C.
