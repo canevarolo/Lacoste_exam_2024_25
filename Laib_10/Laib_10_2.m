@@ -1,4 +1,13 @@
-% Terminare
+% % Consider the cross-section of a steel beam, shown in Figure 1.
+
+% a. Compute and represent the temperature map under steady-state conditions, 
+% with the boundary conditions depicted in the figure and Tin = 20 °C.
+
+% b. Calculate the heat power dissipated per unit length of the beam through the edges 
+% that are at a lower temperature.
+
+% For steel, assume a density of 7800 kg/m³, a thermal conductivity of 1 W/mK, 
+% and a specific heat capacity of 450 J/kgK.
 
 
 % Laib 10, exercise 2
