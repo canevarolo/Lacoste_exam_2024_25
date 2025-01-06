@@ -21,8 +21,6 @@ clear all
 close all
 clc
 
-%%
-
 ll = 0.2; % m
 base = 0.1; % m
 alt = 0.1; % m
@@ -35,7 +33,6 @@ cp = 450; % J/kg/K
 Tout = 5+273; % K
 Tin = 20+273; % K
 
-%%
 
 dx = 1e-2; % m
 dy = dx;
@@ -199,7 +196,6 @@ for jj = Ny1+1:Ny
 
 end
 
-%%
 
 TT = AA\bb;
 
