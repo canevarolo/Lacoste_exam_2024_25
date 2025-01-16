@@ -79,7 +79,7 @@ for jj = 2:Ny-1
     AA(kk,kk) = -(cond*(1/dx^2+1/dy^2)+hh/dx);
     AA(kk,kk+1) = cond/dx^2;
     AA(kk,kk+Nx) = cond/2/dy^2;
-    bb(kk) = -Tair/cond*hh/dx;
+    bb(kk) = -Tair*hh/dx;
 
 end
 
@@ -94,3 +94,12 @@ xlabel('x [m]')
 ylabel('y [m]')
 zlabel('Temperature [K]')
 title('Temperature on the section')
+
+
+
+deltax = [dx/2, dx*ones(1,Nx-2), dx/2];
+deltat = (TTT(:,Ny-1)-TTT(:,Ny));
+qexchange = kk*deltat/dy;
+qtot = sum(qexchange.*deltax,"all");
+
+fprintf("Heat exchange is %.5f W/m^2", qtot)
