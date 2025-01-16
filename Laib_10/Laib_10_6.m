@@ -10,7 +10,7 @@
 
 % c. Using the mesh from part (a), calculate and plot the temperature distribution for h = 10, 100, 500, and 1000 W/m²/K.
 
-% Lab 10, exercise 5
+% Lab 10, exercise 6
 % Simone Canevarolo
 % S269893
 % 09/01/2025
