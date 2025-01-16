@@ -26,8 +26,8 @@ Tair = 30+273; % K
 dx = 1e-2; % m
 dy = dx;
 
-xx = (0:dx:base)';
-yy = (0:dy:alt)';
+xx = (0:dx:alt)';
+yy = (0:dy:base)';
 
 Nx = length(xx);
 Ny = length(yy);
