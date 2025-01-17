@@ -18,12 +18,6 @@
 % c. Analyze the thermal balance of the bar in the initial steady state to verify that the power entering the bar
 % through the sides exposed to convection with the air is balanced by the power dissipated through the sides of the bar
 % in contact with water.
-% 
-% d. Calculate the temperature map of the bar in the steady state reached after the heater is turned on,
-% identifying the thermal level and the location of the hottest point. Solve this both as a transient problem
-% and as a steady-state problem with the heater on.
-% 
-% e. Perform and comment on the verification of the thermal balance of the bar in the final steady state.
 
 
 % Laib 11, exercise 1
@@ -186,11 +180,13 @@ end
 
 TTT = reshape(TT,Nx,Ny);
 
+% Point A
 figure(1)
 surf(xmat,ymat,TTT'-273)
 
 figure(2)
 contourf(xmat,ymat,TTT'-273,20)
 
+% Point B
 figure(3)
 loglog(dxvett,Tmaxvett-273)
