@@ -25,12 +25,11 @@
 % S269893
 % Exam test - June 2019
 
-% TRANSIENT
+%  STEADY-STATE
 
 clear all
 close all
 clc
-
 
 din = 8e-3; % m
 dout = 10e-3; % m
@@ -72,34 +71,25 @@ Nr2 = length(rr2);
 aa1 = kkmox/dr^2;
 aa2 = kkguaina/dr^2;
 
-
-sub_diag1 = -aa1.*(1-dr/2./rr1);
-main_diag1 = (1+2*aa1)*ones(Nr1,1);
-sup_diag1 = -aa1.*(1+dr/2./rr1);
-
-sub_diag2 = -aa2.*(1-dr/2./rr2);
-main_diag2 = (1+2*aa2)*ones(Nr2,1);
-sup_diag2 = -aa2.*(1+dr/2./rr2);
-
-sub_diag = [sub_diag1; sub_diag2];
-main_diag = [main_diag1; main_diag2];
-sup_diag = [sup_diag1; sup_diag2];
+sub_diag = 1-dr/2./rr;
+main_diag = -2*ones(Nr,1);
+sup_diag = 1+dr/2./rr;
 
 Band = [[sub_diag(2:end);0], main_diag, [0;sup_diag(1:end-1)]];
 
 AA = spdiags(Band,-1:1,Nr,Nr);
 
 bb = zeros(Nr,1);
-bb(1:Nr1) = qvolzero;
+bb(1:Nr1) = -qvolzero*dr^2/kkmox;
 % bb(Nr1+1:Nr) = 0;
 
-AA(1,1) = 1;
-AA(1,2) = -1;
+AA(1,1) = -1;
+AA(1,2) = 1;
 bb(1) = 0;
 
-AA(Nr1,Nr1-1) = kkguaina;
+AA(Nr1,Nr1-1) = kkmox;
 AA(Nr1,Nr1) = -kkguaina-kkmox;
-AA(Nr1,Nr1+1) = kkmox;
+AA(Nr1,Nr1+1) = kkguaina;
 bb(Nr1) = 0;
 
 AA(end,end-1) = -kkguaina/dr;
@@ -109,9 +99,14 @@ bb(end) = Tna*hh;
 TT = AA\bb;
 
 figure(1)
-plot(rr,TT-273)
+plot(rr*1e3,TT-273, 'LineWidth',2)
+title('Steady-state plot')
+xlabel('Radius [mm]')
+ylabel('Temperature [°C]')
 
-% STEADY-STATE
+
+
+% TRANSIENT
 
 dt = 0.1; % s
 time = 0; % s
@@ -119,12 +114,11 @@ time = 0; % s
 aa1 = kkmox*dt/romox/cpmox/dr^2;
 aa2 = kkguaina*dt/roguaina/cpguaina/dr^2;
 
-Tm = Tna*ones(Nr,1);
+Tm = zeros(Nr,1);
 Tm1 = Tna*ones(Nr1,1);
 Tm2 = Tna*ones(Nr2,1);
 
 Tmax = Tna;
-
 
 while Tmax < Tend
 
@@ -145,16 +139,16 @@ while Tmax < Tend
     AA = spdiags(Band,-1:1,Nr,Nr);
     
     bb = zeros(Nr,1);
-    bb(1:Nr1) = Tm(1:Nr1)+qvol_in(time)*dt/romox/cpmox;
+    bb(1:Nr1) = Tm(1:Nr1)+qvol_in(time).*dt./romox./cpmox;
     bb(Nr1+1:Nr) = Tm(Nr1+1:Nr);
 
-    AA(1,1) = -1;
-    AA(1,2) = 1;
+    AA(1,1) = 1;
+    AA(1,2) = -1;
     bb(1) = 0;
 
-    AA(Nr1,Nr1-1) = kkguaina;
+    AA(Nr1,Nr1-1) = kkmox;
     AA(Nr1,Nr1) = -kkguaina-kkmox;
-    AA(Nr1,Nr1+1) = kkmox;
+    AA(Nr1,Nr1+1) = kkguaina;
     bb(Nr1) = 0;
 
     AA(end,end-1) = -kkguaina/dr;
@@ -171,4 +165,7 @@ while Tmax < Tend
 end
 
 figure(2)
-plot(rr,TT-273,'LineWidth',2)
+plot(rr*1e3,TT-273,'r','LineWidth',2)
+title('Transient plot')
+xlabel('Radius [mm]')
+ylabel('Temperature [°C]')
