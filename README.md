@@ -8,4 +8,4 @@ The files are developed in MatLab language, charged in .m .
 
 For any mistakes or add-ins, just open a pull request or contact me.
 
-The language used is english, even though there could be some comments or expressions in italian (language of the course).
+Texts - and some parts - will be both in english and italian.
