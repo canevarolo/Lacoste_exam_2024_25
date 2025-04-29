@@ -1,3 +1,15 @@
+% In un impianto industriale è presente un connettore metallico in lega di rame (ro = 5000 kg/m^3, cp = 100 J/kg/K, k = 200 W/m/K) di lunghezza 0.2 m, con sezione esagonale di lato 1 cm.
+% Il connettore attraversa una membrana, di spessore trascurabile, che separa due ambienti: il primo a temperatura 50 °C, mentre il secondo a 20 °C.
+% A causa delle vibrazioni legate al funzionamento dell'impianto, il connettore va periodicamente in contatto termico perfetto con un serbatoio a 100 °C (sulla base di sinsitra).
+% Il contatto termico dura 20 secondi e si ripete una volta al minuto.
+
+% In an industrial plant, there is a metallic connector made of a copper alloy (ρ = 5000 kg/m³, cₚ = 100 J/kg·K, k = 200 W/m·K), with a length of 0.2 m and a hexagonal cross-section with a side of 1 cm.
+% The connector passes through a membrane of negligible thickness that separates two environments: one at a temperature of 50 °C and the other at 20 °C.
+% Due to vibrations related to the operation of the plant, the connector periodically comes into perfect thermal contact with a reservoir at 100 °C (on the left-hand side).
+% The thermal contact lasts for 20 seconds and repeats once every minute.
+
+
+
 clear all
 close all
 clc
