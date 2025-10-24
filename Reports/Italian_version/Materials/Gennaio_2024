@@ -1,0 +1,538 @@
+Simone Canevarolo
+24 gennaio 2025
+
+
+ESAME DI LABORATORIO COMPUTAZIONALE DI SCAMBIO TERMICO
+
+
+Descrizione del problema
+Il problema riguarda la sezione di un conduttore cavo, con passaggio di fluido all’interno e lambito esternamente da un altro fluido con i quali si trova in stato di convezione termica.
+Periodicamente, vi è un’alterazione delle condizioni del problema iniziale: per un tempo di 30 secondi, internamente scorre infatti un fluido a temperatura minore ma con stesso coefficiente convettivo.
+Dopo questo tempo e fino al periodo seguente, della durata di 250 s, le condizioni iniziali vengono ripristinate nei tubi. 
+
+
+Discretizzazione
+Al fine di rispondere alle richieste del problema, si deve partire dalla discretizzazione dell’equazione generale.
+Conoscendo infatti la seguente formulazione in derivate parziali, valida per qualsiasi problema:
+
+ρ cp  ∂T/∂t= q ⃛+∂T/∂x(k(T)(∂T/∂x))- h As/V(T-T_f)
+
+posso discretizzare e ottenere la seguente equazione
+
+T_(i+1)^(m+1) (-aa∙(1+∆r/(2∙rr)))+〖T_i^(m+1) (1+2∙aa)+T〗_(i-1)^(m+1) (-aa∙(1+∆r/(2∙rr)))=T_i^m
+con 
+aa = (k∙∆t)/(∆r^2∙ρ∙cp)
+
+
+Periodicità
+Dalla formula del tau, in secondi:
+
+τ=(ρ cp V)/(h As)
+
+ricavo per il caso corrente, applicando il coefficiente di scambio termico al raggio interno e lo stesso raggio interno ottenuto da semplificazioni della formula, un valore di τ = 5850 s, all’incirca di 1 ora e 37minuti.
+Ciò significa che dopo tale istante di tempo si piò considerare l’impianto a regime periodico, dopo oltre 23 cicli di funzionamento. Nel nostro codice, lo considereremo effettivo dal 24esimo nei calcoli.
+
+
+Grafici
+Sono stati operati 40 cicli di funzionamento. All’istante t = 5850 s è stata posizionata una linea verticale che illustra il momento in cui l’impianto funziona a regime.
+Si osserva un andamento periodico molto accentuato al raggio interno mentre le variazioni di temperatura sono sensibilmente ridotte al raggio esterno.
+Abbiamo da questo grafico la conferma di quanto ipotizzato prima: per via di un coefficiente di scambio termico diverso di due ordini di grandezza, l’andamento della temperatura a regime della sezione del tubo conduttore assume un andamento quasi logaritmico. Infatti, è il principale motivo per cui la variazione di temperatura sul bordo sinistro è nettamente maggiore di quella sul ordo destro durante un periodo.
+ 
+
+Temperatura massima al raggio esterno in condizioni di funzionamento a regime
+La temperatura massima al raggio esterno del tubo di metallo in condizioni di regime è 319.23793 K .
+
+
+Accuratezza numerica del valore massimo di temperatura
+Usando un opportuno vettore con i vari delta di raggio da utilizzare nel problema che rendono più o meno accurata la soluzione, otteniamo questo andamento della temperatura massima nell’impianto a regime. 
+
+
+Confronto con un caso analogo di tubo in resina
+Nel caso di un tubo in resina, che ha proprietà diverse quali una minore densità volumetrica, un maggiore calore specifico e una minore conducibilità termica, osserviamo alcune differenze.
+In primis, è minore il τ, che si attesta su un valore compreso tra 13 e 14 cicli invece di oltre 23. In pratica, l’impianto impiega molto meno tempo ad arrivare a regime.
+Nel tubo in resina, l’oscillazione della temperatura al raggio interno è maggiore, arrivando nello stesso tempo all’incirca a gradi centigradi di temperatura in meno rispetto al caso del tubo visto in precedenza. Allo stesso modo, è ridotta anche l’oscillazione di temperatura al raggio esterno, risultando ancora minore di quella presente nel tubo in metallo.
+Chiaramente ad influire su quest’ultimo aspetto è la minore conducibilità termica.
+
+
+Energia trasferita al fluido all’interno del condotto
+Inserisco i valori delle perdite per unità di lunghezza interne al tubo, considerando tutto il calcolo al netto di una lunghezza di 1 metro per l’area di scambio.
+Nel caso del tubo in metallo, ottengo una dissipazione di circa 2.5 MJ , mentre nel caso dello stesso tubo in resina ottengo poco meno di 1 MJ, 967 KJ, trasferito in un’ora di funzionamento a regime.
+
+
+Quale tubatura utilizzare?
+In seguito allo studio effettuato, al fine di minimizzare le perdite di calore per unità di lunghezza nel tubo, il modello più conveniente termicamente è quello in resina. 
+In un ipotetico acquisto, vi sarebbero numerose variabili in più da considerare, quali il costo e la disponibilità dei materiali e se è conveniente rispetto al caso della tubatura in metallo, al netto di imprevisti e situazioni scomode che potrebbero verificarsi.
+
+
+
+
+
+Script
+
+% Esame di Lacoste - 24/01/2025
+% Simone Canevarolo
+% 24/01/2025
+% s269893@studenti.polito.it
+
+clear all
+close all
+clc
+
+%% Punti 1, 2, 3
+
+rin = 1e-2; % m
+ss = 5e-2; % m
+rout = rin+ss; % m
+
+rovol = 7800; % kg/m^3
+cp = 500; % J/kg/K
+kk = 25; % W/m/K
+
+Tin = 50+273; % K
+Tout = Tin; % K
+
+hout = 20; % W/m^2/K
+hin = 2000; % W/m^2/K
+
+tcon = 30; % s
+freq = 0.004; % Hz
+
+
+dr = 1e-4; % m
+rr = (rin:dr:rout)';
+Nr = length(rr);
+
+dt = 1; % s
+tper = 1/freq; % s
+nper = 40;
+tt = (0:dt:nper*tper);
+Nt = length(tt);
+timeper = 0; % secondo corrente all'interno del periodo
+per = 1; % periodo corrente
+
+Tm = Tin*ones(Nr,1);
+Traggioin = Tin*ones(Nt,1);
+Traggioout = Tout*ones(Nt,1);
+
+Tmaxright = 0;
+Tsave = Tm;
+
+zz = 0;
+
+for ii = 2:Nt
+
+    timeper = timeper+dt;
+
+    aa = kk*dt/dr^2/rovol/cp;
+    
+    sub_diag = -aa.*(1-dr./2./rr);
+    main_diag = (1+2*aa)*ones(Nr,1);
+    sup_diag = -aa.*(1+dr./2./rr);
+
+    Band = [[sub_diag(2:end);0], main_diag, [0;sup_diag(1:end-1)]];
+
+    AA = spdiags(Band,-1:1,Nr,Nr);
+
+    bb = Tm; 
+
+
+    if timeper < 10
+
+        Tin = 50+273; % K
+
+        % Robin
+
+        AA(1,1) = kk/dr+hin;
+        AA(1,2) = -kk/dr;
+        bb(1) = hin*Tin;
+    
+        % Robin
+    
+        AA(end,end-1) = -kk/dr;
+        AA(end,end) = kk/dr+hout;
+        bb(end) = Tout*hout;
+
+
+    elseif timeper >= 10 && timeper <= 40
+
+        Tin = 10+273; % K
+
+        % Robin
+    
+        AA(1,1) = kk/dr+hin;
+        AA(1,2) = -kk/dr;
+        bb(1) = hin*Tin;
+    
+        % Robin
+    
+        AA(end,end-1) = -kk/dr;
+        AA(end,end) = kk/dr+hout;
+        bb(end) = Tout*hout;
+
+    elseif timeper > 40
+
+        Tin = 50+273; % K
+
+        % Robin
+
+        AA(1,1) = kk/dr+hin;
+        AA(1,2) = -kk/dr;
+        bb(1) = hin*Tin;
+    
+        % Robin
+    
+        AA(end,end-1) = -kk/dr;
+        AA(end,end) = kk/dr+hout;
+        bb(end) = Tout*hout;
+
+    end
+
+
+    TT = AA\bb;
+
+    Traggioin(ii) = TT(1);
+    Traggioout(ii) = TT(end);
+
+    if timeper == tper
+
+        timeper = 0;
+        per = per+1;
+
+    end
+
+    if per > 24
+        if Traggioout(ii) > Tmaxright 
+
+            Tmaxright = Traggioout(ii);
+            Tsave = TT;
+
+       end
+
+       zz = zz+1;
+
+       if zz <= 3600
+    
+           qout(zz) = abs(hin*(TT(1)-Tin)*(2*pi*rin));
+    
+       end
+
+    end
+
+
+    Tm = TT;
+
+end
+
+
+tau = rovol*cp/hout*rout/2;
+qouttot = sum(qout,'all');
+
+
+
+figure(1)
+plot(tt,Traggioin-273,'LineWidth',2)
+hold on
+plot(tt,Traggioout-273,'LineWidth',2)
+title('Andamento T nel tempo al raggio interno ed esterno, tubo in metallo')
+xlabel('tempo [s]')
+ylabel('Temperatura [°C]')
+hold on
+xline(tau)
+legend('T raggio interno', 'T raggio esterno','Tau','Location','best')
+
+
+fprintf('La temperatura massima al raggio esterno del tubo di metallo in condizioni di regime è %.5f K \n', Tmaxright)
+
+
+figure(2)
+plot(rr,Tsave-273,'LineWidth',2)
+title('Profilo temperatura quando T raggio esterno è massima')
+xlabel('Lunghezza [m]')
+ylabel('Temperatura [°C]')
+
+fprintf('Energia trasferita al condotto interno in una ora di funzionamento con tubatura in metallo: %.5f J \n', qouttot)
+
+
+
+%% Punto 4 - accuratezza numerica del valore massimo di temperatura
+
+drvett = sort([5e-3 2e-3 1e-3 5e-4 2e-4 1e-4]);
+errmax = zeros(length(drvett),1);
+
+for jj = 1:length(drvett)
+
+    dr = drvett(jj);
+    rr = (rin:dr:rout)';
+    Nr = length(rr);
+
+    dt = 1; % s
+    tper = 1/freq; % s
+    nper = 50;
+    tt = (0:dt:nper*tper);
+    Nt = length(tt);
+    timeper = 0; % secondo corrente all'interno del periodo
+    per = 1; % periodo corrente
+
+    Tm = Tin*ones(Nr,1);
+    Traggioin = Tin*ones(Nt,1);
+    Traggioout = Tout*ones(Nt,1);
+
+    Tmax = 0;
+
+    for ii = 2:Nt
+
+        timeper = timeper+dt;
+
+        aa = kk*dt/dr^2/rovol/cp;
+
+        sub_diag = -aa.*(1-dr./2./rr);
+        main_diag = (1+2*aa)*ones(Nr,1);
+        sup_diag = -aa.*(1+dr./2./rr);
+
+        Band = [[sub_diag(2:end);0], main_diag, [0;sup_diag(1:end-1)]];
+
+        AA = spdiags(Band,-1:1,Nr,Nr);
+
+        bb = Tm; 
+
+
+        if timeper < 10
+
+            Tin = 50+273; % K
+
+            % Robin
+
+            AA(1,1) = kk/dr+hin;
+            AA(1,2) = -kk/dr;
+            bb(1) = hin*Tin;
+
+            % Robin
+
+            AA(end,end-1) = -kk/dr;
+            AA(end,end) = kk/dr+hout;
+            bb(end) = Tout*hout;
+
+
+        elseif timeper >= 10 && timeper <= 40
+
+            Tin = 10+273; % K
+
+            % Robin
+
+            AA(1,1) = kk/dr+hin;
+            AA(1,2) = -kk/dr;
+            bb(1) = hin*Tin;
+
+            % Robin
+
+            AA(end,end-1) = -kk/dr;
+            AA(end,end) = kk/dr+hout;
+            bb(end) = Tout*hout;
+
+        elseif timeper > 40
+
+            Tin = 50+273; % K
+
+            % Robin
+
+            AA(1,1) = kk/dr+hin;
+            AA(1,2) = -kk/dr;
+            bb(1) = hin*Tin;
+
+            % Robin
+
+            AA(end,end-1) = -kk/dr;
+            AA(end,end) = kk/dr+hout;
+            bb(end) = Tout*hout;
+
+        end
+
+
+        TT = AA\bb;
+
+
+        if timeper == tper
+
+            timeper = 0;
+            per = per+1;
+
+        end
+
+        if per > 24
+            if max(TT) > Tmax
+
+                Tmax = max(TT);
+
+            end
+        end
+
+
+        Tm = TT;
+
+    end
+
+    Tmaxvett(jj) = Tmax;
+
+end
+
+
+figure(3)
+semilogx(drvett,Tmaxvett,'LineWidth',2)
+title('Temperatura massima al variare di dr')
+xlabel('dr [m]')
+ylabel('Temperatura massima ')
+grid on
+
+
+
+%% Punto 5 - Tubo in resina
+
+
+rovol = 1500; % kg/m^3
+cp = 1500; % J/kg/K
+kk = 5; % W/m/K
+
+dr = 1e-4; % m
+rr = (rin:dr:rout)';
+Nr = length(rr);
+
+dt = 1; % s
+tper = 1/freq; % s
+nper = 25;
+tt = (0:dt:nper*tper);
+Nt = length(tt);
+timeper = 0; % secondo corrente all'interno del periodo
+per = 1; % periodo corrente
+
+Tm = Tin*ones(Nr,1);
+Traggioin = Tin*ones(Nt,1);
+Traggioout = Tout*ones(Nt,1);
+
+Tmaxright = 0;
+Tsave = Tm;
+
+zz = 0;
+
+for ii = 2:Nt
+
+    timeper = timeper+dt;
+
+    aa = kk*dt/dr^2/rovol/cp;
+    
+    sub_diag = -aa.*(1-dr./2./rr);
+    main_diag = (1+2*aa)*ones(Nr,1);
+    sup_diag = -aa.*(1+dr./2./rr);
+
+    Band = [[sub_diag(2:end);0], main_diag, [0;sup_diag(1:end-1)]];
+
+    AA = spdiags(Band,-1:1,Nr,Nr);
+
+    bb = Tm; 
+
+
+    if timeper < 10
+
+        Tin = 50+273; % K
+
+        % Robin
+
+        AA(1,1) = kk/dr+hin;
+        AA(1,2) = -kk/dr;
+        bb(1) = hin*Tin;
+    
+        % Robin
+    
+        AA(end,end-1) = -kk/dr;
+        AA(end,end) = kk/dr+hout;
+        bb(end) = Tout*hout;
+
+
+    elseif timeper >= 10 && timeper <= 40
+
+        Tin = 10+273; % K
+
+        % Robin
+    
+        AA(1,1) = kk/dr+hin;
+        AA(1,2) = -kk/dr;
+        bb(1) = hin*Tin;
+    
+        % Robin
+    
+        AA(end,end-1) = -kk/dr;
+        AA(end,end) = kk/dr+hout;
+        bb(end) = Tout*hout;
+
+    elseif timeper > 40
+
+        Tin = 50+273; % K
+
+        % Robin
+
+        AA(1,1) = kk/dr+hin;
+        AA(1,2) = -kk/dr;
+        bb(1) = hin*Tin;
+    
+        % Robin
+    
+        AA(end,end-1) = -kk/dr;
+        AA(end,end) = kk/dr+hout;
+        bb(end) = Tout*hout;
+
+    end
+
+
+    TT = AA\bb;
+
+    Traggioin(ii) = TT(1);
+    Traggioout(ii) = TT(end);
+
+    if timeper == tper
+
+        timeper = 0;
+        per = per+1;
+
+    end
+
+    if per > 14
+        if Traggioout(ii) > Tmaxright 
+
+            Tmaxright = Traggioout(ii);
+            Tsave = TT;
+
+       end
+
+       zz = zz+1;
+
+       if zz <= 3600
+    
+           qout_res(zz) = abs(hin*(TT(1)-Tin)*(2*pi*rin));
+    
+       end
+
+    end
+
+
+    Tm = TT;
+
+end
+
+
+tau_res = rovol*cp/hout*rout/2;
+qouttot_res = sum(qout_res,'all');
+
+
+
+figure(4)
+plot(tt,Traggioin-273,'LineWidth',2)
+hold on
+plot(tt,Traggioout-273,'LineWidth',2)
+title('Andamento T nel tempo al raggio interno ed esterno, tubo in resina')
+xlabel('tempo [s]')
+ylabel('Temperatura [°C]')
+hold on
+xline(tau_res)
+legend('T raggio interno', 'T raggio esterno','Tau','Location','best')
+
+
+fprintf('Energia trasferita al condotto interno in una ora di funzionamento con tubatura in resina: %.5f J', qouttot_res)
