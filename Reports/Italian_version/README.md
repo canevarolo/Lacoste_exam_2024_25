@@ -1,3 +1,6 @@
 # Report recenti
 
-[Report gennaio 2024](https://docs.google.com/gview?url=https://raw.githubusercontent.com/canevarolo/Lacoste_exam_2024_25/refs/heads/main/Reports/Italian_version/269893_24.docx&embedded=true)
+I PDF si possono sia visualizzare che scaricare direttamente da GitHub.
+Nella cartella " " troverete le immagini e il documento di testo per eventualmente copiare parti di testo.
+
+Si accettano suggerimenti e correzioni di qualsiasi tipo sui file.
