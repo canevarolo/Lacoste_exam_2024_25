@@ -1,0 +1,93 @@
+**Simone Canevarolo**
+**January 24, 2025**
+
+**COMPUTATIONAL LABORATORY EXAM ON HEAT EXCHANGE**
+
+---
+
+### Problem Description
+
+The problem concerns the cross-section of a hollow conductor, with fluid flowing inside and in contact externally with another fluid, both experiencing thermal convection.
+Periodically, the initial conditions of the problem are altered: for 30 seconds, a fluid at a lower temperature flows internally, but with the same convective coefficient.
+After this period and until the next cycle, lasting 250 seconds, the initial conditions are restored inside the pipes.
+
+---
+
+### Discretization
+
+To solve the problem, one must start from the discretization of the general equation.
+Starting from the following partial differential equation formulation, valid for any problem:
+
+[
+\rho c_p \frac{\partial T}{\partial t} = \vec{q} + \frac{\partial}{\partial x} \big(k(T)\frac{\partial T}{\partial x}\big) - h \frac{A_s}{V} (T-T_f)
+]
+
+we can discretize it and obtain the equation:
+
+[
+T_{i+1}^{m+1}(-aa\cdot(1+\frac{\Delta r}{2 r_r})) + T_i^{m+1} (1 + 2\cdot aa) + T_{i-1}^{m+1}(-aa\cdot(1+\frac{\Delta r}{2 r_r})) = T_i^m
+]
+
+with
+[
+aa = \frac{k \cdot \Delta t}{\Delta r^2 \cdot \rho \cdot c_p}
+]
+
+---
+
+### Periodicity
+
+From the formula for (\tau) (in seconds):
+
+[
+\tau = \frac{\rho c_p V}{h A_s}
+]
+
+for the current case, applying the heat transfer coefficient at the inner radius and using simplifications of the formula, we obtain (\tau = 5850\ \mathrm{s}), approximately 1 hour and 37 minutes.
+This means that after this time, the system can be considered to operate in steady periodic conditions, after over 23 cycles. In our code, we consider it effective from the 24th cycle in the calculations.
+
+---
+
+### Graphs
+
+40 operating cycles were simulated. At (t = 5850\ \mathrm{s}), a vertical line marks the moment the system reaches steady state.
+A strongly periodic behavior is observed at the inner radius, while temperature variations at the outer radius are significantly smaller.
+This confirms the initial hypothesis: due to a heat transfer coefficient differing by two orders of magnitude, the temperature profile of the pipe section at steady state follows an almost logarithmic trend. Consequently, temperature variation at the left edge is much larger than at the right edge during a cycle.
+
+---
+
+### Maximum Temperature at the Outer Radius in Steady-State Operation
+
+The maximum temperature at the outer radius of the metal pipe under steady-state conditions is **319.23793 K**.
+
+---
+
+### Numerical Accuracy of the Maximum Temperature
+
+Using a vector with various radial increments for the problem, which makes the solution more or less accurate, we obtained the trend of maximum temperature in the system at steady state.
+
+---
+
+### Comparison with a Resin Pipe
+
+In the case of a resin pipe, which has different properties such as lower volumetric density, higher specific heat, and lower thermal conductivity, some differences are observed:
+
+* (\tau) is smaller, between 13 and 14 cycles instead of over 23. The system reaches steady state more quickly.
+* Temperature oscillation at the inner radius is larger, but absolute temperature is lower by roughly the same number of degrees compared to the metal pipe.
+* Temperature oscillation at the outer radius is smaller than in the metal pipe, due to the lower thermal conductivity.
+
+---
+
+### Energy Transferred to the Fluid Inside the Conduit
+
+The values of energy losses per unit length inside the pipe are calculated, considering a length of 1 meter for the heat exchange area.
+
+* For the metal pipe: approximately **2.5 MJ**.
+* For the same pipe in resin: slightly less than 1 MJ (**967 kJ**) transferred in one hour of steady-state operation.
+
+---
+
+### Which Pipe Material to Use?
+
+Based on the study, to minimize heat losses per unit length in the pipe, the thermally optimal model is the resin pipe.
+In a hypothetical purchase, many other variables would need to be considered, such as cost and material availability, and whether it is advantageous compared to metal piping, taking into account possible unforeseen issues or complications.
