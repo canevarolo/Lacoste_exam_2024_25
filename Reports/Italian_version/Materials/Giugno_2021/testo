@@ -1,0 +1,502 @@
+Tema d’esame giugno 2021
+
+
+Introduzione
+
+Una parete contiene per necessità strutturali pilastri d’acciaio lungo la sua altezza, essi però causano una discontinuità di materiale nella parete e questo produce uno scambio termico maggiore con l’esterno.
+Lo studio dei ponti termici risulta essere fondamentale per il dimensionamento corretto di un impianto di riscaldamento e/o refrigerazione. I ponti termici sono facilmente evidenziabili facendo una mappa di temperatura di un’abitazione, le mansarde sono maggiormente critiche a livello di gestione della temperatura interna, in quanto anche le discontinuità strutturali generano un ponte termico. 
+L’effetto del ponte termico è definito come:
+
+Ψ=(Qpt-Q)/(L*(Tin-Tout) )
+
+Dove Qpt rappresenta il flusso in presenza di ponte termico e Q il flusso in assenza di tale contributo.
+L è la lunghezza del ponte termico, la quale da normativa risulta pari a 1 m.
+Il flusso senza ponte termico deve essere valutato prendendo la parete senza il pilastro.
+
+
+Descrizione del problema
+Al fine di valutare la mappa di temperatura della parete, vengono proposte due approssimazioni. La prima mira ad ottenere uno studio con un semplice modello 1D, questa approssimazione prevede un solo strato omogeneo, ottenuto mediando le proprietà dei due materiali. La seconda approssimazione prevede lo studio di un modello bidimensionale, questo approccio porterà sicuramente ad una soluzione corretta in quanto lungo la terza direzione ci saremmo aspettati un andamento costante e quindi ininfluente per il nostro studio.
+
+
+Problema monodimensionale
+L’equazione di partenza è quella di conservazione dell’energia che, considerando un solido, può essere semplificata dei termini convettivi. Trascuriamo anche le dissipazioni viscose e il lavoro delle forze di pressione.
+ρcp*dT/dt=div(k*grad(T))+q'''
+Il caso in esame prevede uno studio stazionario, quindi il primo membro non viene considerato in quanto transitorio. Il coefficiente di scambio termico risulta costante e questo porta ad avere una semplice moltiplicazione di esso per il laplaciano della temperatura. 
+Il termine q’’’ rappresenta la potenza volumetrica, pari a zero nel nostro caso.
+Otteniamo quindi:
+
+k*((d^2 T)/(dx^2 ))=0
+
+
+Condizioni al contorno
+La parete risulta esposta ad aria a due temperature diverse, quindi abbiamo due condizioni di Robin, le quali però essendo diverse non permettono la semplificazione del dominio.
+Il testo fornisce inoltre le adduttanze, quella relativa allo scambio con l’esterno risulta essere maggiore, mi aspetto quindi una distribuzione di temperatura più vicina alla temperatura esterna piuttosto che a quella interna.
+
+Risoluzione del problema 1D
+Considerata l’estrema semplicità della formulazione e delle condizioni al contorno non è necessario l’utilizzo di un calcolatore per risolvere il problema, sarà sufficiente risolvere analiticamente il problema impostando le condizioni al contorno, facendo poi il grafico su matlab una volta noti i valori alle estremità, visto che l’andamento è lineare. Mi aspetto un andamento lineare tra la temperatura esterna ed interna in quanto non è presente un termine di generazione volumetrica.
+Per impostare le condizioni al contorno devo imporre il flusso conduttivo pari a quello convettivo su entrambi i lati, così facendo trovo le costanti di integrazione e di conseguenza l’andamento della temperatura nello spazio.
+Non avendo limiti temporali decido di impostare ugualmente il problema su matlab così che se volessi valutare un caso analogo con una generazione volumetrica nella parete non costante, come ad esempio la presenza di cavi elettrici in cui scorre corrente, sarei in grado di risolvere il problema modificando soltanto un parametro.
+
+Si può notare come nel caso in cui è presente anche il pontile in acciaio il gradiente termico risulti più contenuto in quanto la conducibilità media è più elevata rispetto al caso del solo laterizio e la condizione di Robin definisce una relazione tra la temperatura all’estremità e il coefficiente di scambio termico conduttivo inversamente proporzionale.
+
+-k*dT/dx=h*(T-Ta)
+
+
+Flusso scambiato
+Essendo in condizioni stazionarie, il flusso deve mantenersi costante lungo la parete. Per valutare il flusso scambiato è sufficiente valutare il flusso convettivo scambiato. Abbiamo un flusso convettivo verso l’interno e uno verso l’esterno. Il flusso si deve conservare, quindi il flusso conduttivo attraverso la parete deve essere uguale ai due convettivi.
+Conoscendo i flussi scambiati nelle due condizioni sono in grado di calcolare l’effetto del ponte termico Ψ.
+
+
+Studio dell’errore
+Considerando l’equazione appena risolta, mi aspetto un errore indipendente dal parametro di discretizzazione.
+UB rappresenta il limite superiore sopra il quale è doveroso stare per non incorrere in errori dovuti ad arrotondamento di macchina.
+
+
+Descrizione problema bidimensionale
+Per creare il vettore delle temperature in un problema bidimensionale si parte dalla stessa equazione descritta per il caso monodimensionale, nella quale il laplaciano non ha più solo una coordinata ma due.
+
+k*((d^2 T)/dx+(d^2 T)/dy)=0
+
+Ci troviamo quindi con due indici invece di uno solo, in quanto dobbiamo muoverci lungo due direzioni differenti. Noi vogliamo però ottenere un vettore delle temperature, quindi dovremo passare ad una formulazione con un singolo indice. L’indice unico sarà definito partendo da in basso a sinistra e muovendosi lungo le righe, una volta terminata la riga si tornerà al primo punto della riga superiore. Essendo che ragioneremo inversamente a come fa il compilatore sarà poi necessario trasporre il risultato.
+La matrice risultante dalla discretizzazione dell’equazione non sarà più tridiagonale, ma composta da cinque diagonali.
+Anche se questa geometria lo consentirebbe, non è sempre facile trovare gli indici per un oggetto bidimensionale, per questo scelgo di risolvere il problema costruendo prima i nodi interni e poi i nodi di bordo e le interfacce del dominio invece di creare direttamente le diagonali.
+
+
+Condizioni al contorno
+A nord e sud del dominio abbiamo convezione mentre ad est ed ovest abbiamo adiabaticità. Essendo le condizioni ad est e ovest uguali la geometria possiede un asse di simmetria lungo tale direzione possiamo prendere solo metà del dominio computazionale.
+Sarà necessario inoltre imporre la continuità di flusso lungo i bordi di interfaccia e fare dei bilanci sugli spigoli presenti nel dominio al fine di conservare l’energia in ogni punto.
+
+
+Risoluzione del problema bidimensionale
+Nel caso senza ponte termico l’andamento sarà costante lungo l’asse x in quanto le condizioni al contorno di adiabaticità rendono lo studio lungo tale direzione, in assenza di generazione di potenza in funzione di tale coordinata, superfluo ai fini della conoscenza dell’andamento della temperatura.
+ 
+
+La mappa di temperatura trovata rispecchia a pieno l’andamento previsto ed è uguale all’andamento valutato in un caso monodimensionale, per questo possiamo affermare che in assenza di ponte termico non sarebbe necessario effettuare uno studio bidimensionale.
+Per ulteriore verifica valutiamo in flusso scambiato convettivamente anche in questo caso, anche se ci aspettiamo che sia pari a quello del caso monodimensionale.
+Per valutare il flusso è possibile fare l’integrale lungo un lato utilizzando il comando predefinito “trapz” oppure valutare l’integrale come vera e propria sommatoria e valutare il flusso sommando ogni contributo lungo tale lato.
+Svolgendo il calcolo troviamo un valore analogo a quello trovato nel caso monodimensionale. 
+Per completare la valutazione dell’effetto del ponte termico basta adesso valutare se il flusso bidimensionale scambiato sia pari a quello monodimensionale.
+
+
+Caso 2D con ponte termico
+Considerando il ponte termico in due dimensioni mi aspetto un andamento della temperatura più articolato rispetto a quello monodimensionale. Il gradiente di temperatura che, variando lungo l’asse x a causa della disomogeneità di materiale, risulterà esprimibile puntualmente solo con uno studio bidimensionale.
+Impostando solo i coefficienti diversi nei vari punti del dominio iniziamo a vedere come analogamente al caso monodimensionale il gradiente di temperatura tra gli estremi nello strato di acciaio risulti essere minore.
+
+
+Interfaccia
+Aggiungendo le condizioni di interfaccia al problema precedente si delinea la mappa di temperatura effettiva dell’oggetto.
+L’effetto della convezione rimane visibile nella parte con il laterizio mentre nella parte composta da acciaio la variazione risulta contenuta. 
+
+
+Flusso scambiato
+Da tale configurazione è già possibile valutare il flusso scambiato. Esso risulta molto minore rispetto al caso monodimensionale con ponte termico in quanto l’aria scambia con una grande prevalenza di laterizio e quindi utilizzare un coefficiente mediato sul volume ha prodotto una grande sovrastima del flusso scambiato.
+
+
+Conclusione
+Valutando i flussi scambiati nelle due approssimazioni differenti, per le motivazioni espresse nell’analisi delle due configurazioni, possiamo affermare con certezza che l’effetto del ponte termico risulti profondamente diverso nei due casi e riteniamo uno studio bidimensionale più adatto per valutare tale parametro.
+
+
+
+
+MODIFICHE
+Come richiesto aggiungo una componente di acciaio alla struttura in modo da formare una “H” ribaltata su un fianco e studio i cambiamenti.
+In assenza di ulteriori informazioni consideriamo il coefficiente di scambio termico convettivo della parete sud pari a quello della versione precedente.
+1D
+Il caso senza ponte termico rimane chiaramente invariato mentre l’approssimazione monodimensionale che considera il ponte termico, avendo un volume maggiore di acciaio, mi aspetto che abbia un andamento ancora meno inclinato rispetto al caso precedente.
+ 
+L’andamento, essendo il volume di laterizio molto più elevato rispetto a quello dell’acciaio, risulta quasi identico a quello del caso precedente.
+
+Flusso scambiato
+Cambiando il coefficiente di scambio termico conduttivo nel caso con ponte termico, si modifica anche il flusso scambiato per convezione.
+-k*dT/dx=h*(T-Tf)
+Come abbiamo però notato, la modifica eseguita alla struttura risulta essere molto piccola rispetto al volume totale e il flusso scambiato si modifica di una quota vicina all’1%.
+
+
+2D
+Nonostante la figura abbia in questo caso due assi di simmetria, non essendo anche le condizioni convettive uguali nei due lati il dominio deve restare invariato
+Per quanto riguarda il caso bidimensionale notiamo una diversa distribuzione della temperatura in quanto nella superficie di acciaio aggiunta notiamo un andamento speculare a ciò che accade nella parte superiore della parete.
+
+
+Flusso scambiato
+Aumentando il volume di acciaio notiamo che il flusso scambiato aumenta se consideriamo il ponte termico.
+
+
+Conclusione
+Abbiamo potuto osservare che al variare del volume di acciaio otteniamo diversi valori per il flusso scambiato, tale contributo è fondamentale per verificare la buona resistenza di un’abitazione ai cambiamenti climatici esterni.
+
+
+
+
+
+
+
+
+
+
+Script tema d’esame versione 1
+1D
+clear all
+close all
+clc
+ 
+Tin=20+273;
+Tout=5+273;
+hin=7.7;
+hout=25;
+LL=10e-2;
+HH=30e-2;
+altezza=4;
+qvol=0;
+ 
+kacc=60;
+klat=0.36;
+ 
+%1D
+dx=1e-3;
+xx=(0:dx:HH)';
+nn=length(xx);
+upd=ones(nn,1);
+main=-2*ones(nn,1);
+downd=upd;
+bb=(qvol/klat*dx^2)*ones(nn,1);
+AA=spdiags([upd,main,downd],[1,0,-1],nn,nn);
+AA(1,1)=1+hout*dx/klat;
+AA(1,2)=-1;
+AA(end,end)=1+hin*dx/klat;
+AA(end,end-1)=-1;
+bb(1)=hout*dx/klat*Tout;
+bb(end)=hin*dx/klat*Tin;
+ 
+TT=AA\bb;
+qqout=hout*(TT(1)-Tout);
+qqin=abs(hin*(TT(end)-Tin))
+ 
+kacc=60;
+klat=0.36;
+Vacc=(3*LL*LL+(HH-LL)*LL)*altezza;
+Vlat=2*(0.95*0.2+0.01*0.85)*altezza;
+keq=(kacc*Vacc+klat*Vlat)/(Vlat+Vacc);
+dx=1e-3;
+xx=(0:dx:HH)';
+nn=length(xx);
+upd=ones(nn,1);
+main=-2*ones(nn,1);
+downd=upd;
+bb=(qvol/keq*dx^2)*ones(nn,1);
+AA=spdiags([upd,main,downd],[1,0,-1],nn,nn);
+AA(1,1)=1+hout*dx/keq;
+AA(1,2)=-1;
+AA(end,end)=1+hin*dx/keq;
+AA(end,end-1)=-1;
+bb(1)=hout*dx/keq*Tout;
+bb(end)=hin*dx/keq*Tin;
+ 
+ 
+TTpt=AA\bb;
+ 
+qqptout=(hout*(TTpt(1)-Tout));
+qqptin=abs(hin*(TTpt(end)-Tin));
+figure(1)
+plot(xx,TTpt,'b','linewidth',3)
+hold on
+plot(xx,TT,'r','linewidth',3)
+xlabel('spazio [m]')
+ylabel('Temperatura[k]')
+legend('T con ponte termico','T senza ponte termico','location','bestout')
+title('Distribuzione di temperatura 1D')
+set(gca,'fontsize',16)
+ 
+figure(2)
+bar(qqptout)
+hold on
+bar(qqout)
+ylabel('flusso scambiato [W/m^2K]')
+legend('flusso con ponte termico','flusso senza ponte termico','location','bestout')
+ 
+ 
+ 
+psi1D=(qqptout-qqout)/(Tin-Tout);
+
+2D
+clear all
+close all
+clc
+ 
+Tin=20+273;
+Tout=5+273;
+hin=7.7;
+hout=25;
+LL=10e-3;
+HH=30e-2;
+altezza=4;
+ 
+ 
+klat=0.36;
+ 
+dx=1e-2;
+dy=1e-2;
+xvect=(0:dx:1)';
+nx=length(xvect);
+yvect=(0:dy:HH)';
+ny=length(yvect);
+ 
+ntot=nx*ny;
+AA=sparse([],[],[],ntot,ntot,5*ntot);
+bb=zeros(ntot,1);
+ 
+ 
+ 
+for ii=2:nx-1
+    for jj=2:ny-1
+        kc=(jj-1)*nx+ii;
+        AA(kc,kc)=2*(1/dy^2+1/dx^2);
+        AA(kc,kc+1)=-1/dx^2;
+        AA(kc,kc-1)=-1/dx^2;
+        AA(kc,kc+nx)=-1/dy^2;
+        AA(kc,kc-nx)=-1/dy^2;
+    end
+end
+ii=1;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+     AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc+1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ii=nx;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc-1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ 
+jj=1;
+for ii=2:nx-1
+    kc=ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hout/klat/dy);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+nx)=-2/dy^2;
+    AA(kc,kc+1)=-1/dx^2;
+    bb(kc)=2*hout/klat/dy*Tout;
+end
+ 
+jj=ny;
+for ii=2:nx-1
+    kc=nx*(ny-1)+ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hin/dy/klat);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+1)=-1/dx^2;
+    AA(kc,kc-nx)=-2/dy^2;
+    bb(kc)=2*hin/dy*Tin/klat;
+end
+ 
+kc=1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/klat);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hout/dy/klat*Tout;
+  
+ 
+kc=nx;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/klat);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hout/dy*Tout/klat;
+ 
+kc=ntot-nx+1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/klat/dx);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hin/dy*Tin/klat;
+ 
+kc=ntot;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/dy/klat);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hin/dx*Tin/klat;
+ 
+[X,Y]=meshgrid(xvect,yvect);
+ 
+TT=AA\bb;
+Tmatrix=reshape(TT,nx,ny);
+ 
+figure(1)
+surf(X,Y,Tmatrix')
+colorbar
+ 
+qq=trapz(xvect,hout*(TT(1:nx)-Tout));
+ 
+ 
+Tin=20+273;
+Tout=5+273;
+hin=7.7;
+hout=25;
+LL=10e-3;
+HH=30e-2;
+altezza=4;
+ 
+ 
+klat=0.36;
+kacc=60;
+ 
+dx=1e-2;
+dy=1e-2;
+xvect=(0:dx:1)';
+nx=length(xvect);
+yvect=(0:dy:HH)';
+ny=length(yvect);
+xvect1=(0:dx:5e-2)';
+nx1=length(xvect1);
+xvect2=(0:dx:15e-2)';
+nx2=length(xvect2);
+yvect1=(0:dy:20e-2)';
+ny1=length(yvect1);
+ 
+ 
+ntot=nx*ny;
+AA=sparse([],[],[],ntot,ntot,5*ntot);
+bb=zeros(ntot,1);
+ 
+ 
+ 
+for ii=2:nx-1
+    for jj=2:ny-1
+        kc=(jj-1)*nx+ii;
+        AA(kc,kc)=2*(1/dy^2+1/dx^2);
+        AA(kc,kc+1)=-1/dx^2;
+        AA(kc,kc-1)=-1/dx^2;
+        AA(kc,kc+nx)=-1/dy^2;
+        AA(kc,kc-nx)=-1/dy^2;
+    end
+end
+ii=1;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+     AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc+1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ii=nx;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc-1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ 
+jj=1;
+for ii=2:nx-1
+    kc=ii;
+    if ii<=nx1
+        kk=kacc;
+    else
+        kk=klat;
+    end
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hout/kk/dy);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+nx)=-2/dy^2;
+    AA(kc,kc+1)=-1/dx^2;
+    bb(kc)=2*hout/kk/dy*Tout;
+end
+ 
+jj=ny;
+for ii=2:nx-1
+    kc=nx*(ny-1)+ii;
+    if ii<=nx2
+        kk=kacc;
+    else
+        kk=klat;
+    end
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hin/dy/kk);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+1)=-1/dx^2;
+    AA(kc,kc-nx)=-2/dy^2;
+    bb(kc)=2*hin/dy*Tin/kk;
+end
+ 
+ 
+%Interfaccia
+ii=nx1;
+for jj=2:ny1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=-(1/dx^2+klat/kacc/dx^2);
+    AA(kc,kc+1)=klat/kacc/dx^2;
+    AA(kc,kc-1)=1/dx^2;
+    AA(kc,kc+nx)=0;
+    AA(kc,kc-nx)=0;
+end
+ 
+ii=nx2;
+for jj=ny1+1:ny-1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=-(1/dx^2+klat/kacc/dx^2);
+    AA(kc,kc+1)=klat/kacc/dx^2;
+    AA(kc,kc-1)=1/dx^2;
+    AA(kc,kc+nx)=0;
+    AA(kc,kc-nx)=0;
+end
+ 
+%Interfaccia orizzontale
+jj=ny1;
+for ii=nx1:nx2
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=-klat/kacc/dx^2-1/dx^2;
+    AA(kc,kc+nx)=1/dx^2;
+    AA(kc,kc-nx)=klat/kacc/dx^2;
+    AA(kc,kc+1)=0;
+    AA(kc,kc-1)=0;
+end
+ 
+%Spigoli
+kc=1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/kacc);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hout/dy/kacc*Tout;
+  
+ 
+kc=nx;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/klat);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hout/dy*Tout/klat;
+ 
+kc=ntot-nx+1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/kacc/dx);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hin/dy*Tin/kacc;
+ 
+kc=ntot;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/dy/klat);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hin/dx*Tin/klat;
+ 
+[X,Y]=meshgrid(xvect,yvect);
+ 
+TT=AA\bb;
+Tmatrix=reshape(TT,nx,ny);
+ 
+figure(2)
+surf(X,Y,Tmatrix')
+colorbar
+ 
+qqpt=trapz(xvect,hout*(TT(1:nx)-Tout));
+ 
+ 
+figure(3)
+bar(qqpt)
+hold on
+bar(qq)
+ylabel('flusso disperso W/m^2')
+
+psi2d=(qqpt-qq)/(Tin-Tout);
+
+
+Versione modificata
