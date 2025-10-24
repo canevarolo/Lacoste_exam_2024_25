@@ -1,0 +1,467 @@
+June 2021 Exam 
+
+Introduction
+A wall contains steel pillars along its height for structural reasons. However, these create a material discontinuity in the wall, which leads to increased heat exchange with the outside.
+The study of thermal bridges is fundamental for the correct sizing of a heating and/or cooling system. Thermal bridges are easily identified by creating a temperature map of a building. Attics are particularly critical in terms of internal temperature management, as structural discontinuities also generate a thermal bridge.
+The effect of a thermal bridge is defined as:
+
+Ψ = (Qpt - Q) / (L * (Tin - Tout))
+
+where Qpt is the heat flux in the presence of a thermal bridge and Q is the flux without it.
+L is the length of the thermal bridge, which according to regulations is 1 m.
+The flux without the thermal bridge must be evaluated considering the wall without the pillar.
+
+Problem Description
+To evaluate the temperature map of the wall, two approximations are proposed.
+
+The first uses a simple 1D model, assuming a single homogeneous layer obtained by averaging the properties of the two materials.
+
+The second uses a 2D model, which will provide a more accurate solution since along the third direction the temperature is expected to be constant and therefore irrelevant for our study.
+
+One-Dimensional Problem
+The starting point is the energy conservation equation. Considering a solid, convective terms are neglected, as are viscous dissipation and work from pressure forces:
+
+ρ cp dT/dt = div(k * grad(T)) + q'''
+
+The case considered is steady-state, so the transient term is ignored. The heat transfer coefficient is constant, which simplifies the equation to a simple multiplication by the temperature Laplacian. The volumetric heat generation q''' is zero.
+
+Thus, the equation reduces to:
+
+k * (d²T / dx²) = 0
+
+Boundary Conditions
+The wall is exposed to air at two different temperatures, resulting in two Robin boundary conditions. Since the conditions differ, the domain cannot be simplified.
+The text provides the heat transfer coefficients; the coefficient for the external side is larger, so the temperature distribution is expected to be closer to the external temperature.
+
+1D Problem Solution
+Given the simplicity of the formulation and boundary conditions, the problem can be solved analytically. By applying the boundary conditions, the temperature values at the ends can be obtained, which can then be plotted in MATLAB. The temperature profile is expected to be linear since there is no volumetric heat generation.
+The boundary conditions are set so that the conductive flux equals the convective flux on both sides. This allows calculation of the integration constants and the temperature profile in space.
+Even without time constraints, the problem is implemented in MATLAB so that cases with non-uniform volumetric generation (e.g., electric cables) can be solved by simply modifying one parameter.
+
+When a steel pillar is present, the thermal gradient is smaller because the average conductivity is higher. The Robin condition defines a relationship between end temperature and convective coefficient, inversely proportional:
+
+-k * dT/dx = h * (T - Ta)
+
+Heat Flux Exchanged
+In steady-state, the flux is constant along the wall. To evaluate the exchanged flux, it is enough to calculate the convective flux. There is one convective flux inward and one outward. The conductive flux through the wall must equal the two convective fluxes. Knowing the fluxes allows calculation of the thermal bridge effect Ψ.
+
+Error Study
+From the solved equation, the error is expected to be independent of the discretization parameter. UB represents the upper limit above which rounding errors may occur.
+
+Two-Dimensional Problem Description
+For the 2D problem, the same starting equation is used, but the Laplacian now depends on two coordinates:
+
+k * (d²T/dx² + d²T/dy²) = 0
+
+We now have two indices instead of one. To form a temperature vector, a single index is assigned, starting from the bottom-left and moving along rows, then moving to the first point of the next row. Since this is opposite to the compiler’s order, the result must be transposed.
+The discretization results in a five-diagonal matrix.
+Rather than directly forming diagonals, the internal nodes and boundary/interface nodes are created first to simplify indexing.
+
+Boundary Conditions
+The north and south boundaries have convection; east and west are adiabatic. Because east and west conditions are equal, the domain has a symmetry axis along this direction, so only half of the domain is used.
+Continuity of flux along interface edges and energy balances at corners are required to conserve energy.
+
+2D Problem Solution
+Without a thermal bridge, the temperature profile is constant along the x-axis due to adiabatic boundaries and no power generation along that direction.
+
+The 2D temperature map matches the 1D solution, confirming that 2D analysis is unnecessary without a thermal bridge. Convective flux can be calculated using integration along one side (“trapz” or summation). The result is similar to the 1D case. To evaluate the thermal bridge effect, the 2D flux is compared to the 1D flux.
+
+2D Case with Thermal Bridge
+With a thermal bridge, the temperature profile is more complex than in 1D. The temperature gradient along x varies due to material heterogeneity, requiring 2D analysis.
+By assigning different coefficients in the domain, the gradient in the steel layer is smaller, similar to the 1D case.
+
+Interface
+Adding interface conditions yields the actual temperature map. Convection effects remain in the brick section, while the steel section shows smaller variation.
+
+Heat Flux Exchanged
+The flux is much lower than the 1D thermal bridge case because air mostly interacts with brick, so using a volume-averaged coefficient overestimates flux.
+
+Conclusion
+Comparing the two approximations, the thermal bridge effect is clearly different. A 2D study is more appropriate for evaluating this parameter.
+
+Modifications
+A steel component is added to form an inverted “H” shape.
+The convective coefficient on the south wall is assumed the same as before.
+
+1D
+Without a thermal bridge, the case is unchanged. The 1D approximation with the thermal bridge, having more steel volume, shows an even flatter temperature gradient.
+Since brick volume dominates, the profile is nearly identical to the previous case.
+
+Heat Flux Exchanged
+Changing the conductive coefficient slightly alters the convective flux. The effect is small (~1%).
+
+2D
+Even with two symmetry axes, the domain cannot be reduced because convection differs on the two sides.
+The temperature distribution is different: in the added steel, a mirror effect is observed compared to the upper wall.
+
+Heat Flux Exchanged
+Increasing steel volume increases flux when the thermal bridge is considered.
+
+Conclusion
+Varying steel volume changes the exchanged flux. This is critical for assessing a building’s resistance to external climate changes.
+
+
+
+clear all
+close all
+clc
+ 
+Tin=20+273;
+Tout=5+273;
+hin=7.7;
+hout=25;
+LL=10e-2;
+HH=30e-2;
+altezza=4;
+qvol=0;
+ 
+kacc=60;
+klat=0.36;
+ 
+%1D
+dx=1e-3;
+xx=(0:dx:HH)';
+nn=length(xx);
+upd=ones(nn,1);
+main=-2*ones(nn,1);
+downd=upd;
+bb=(qvol/klat*dx^2)*ones(nn,1);
+AA=spdiags([upd,main,downd],[1,0,-1],nn,nn);
+AA(1,1)=1+hout*dx/klat;
+AA(1,2)=-1;
+AA(end,end)=1+hin*dx/klat;
+AA(end,end-1)=-1;
+bb(1)=hout*dx/klat*Tout;
+bb(end)=hin*dx/klat*Tin;
+ 
+TT=AA\bb;
+qqout=hout*(TT(1)-Tout);
+qqin=abs(hin*(TT(end)-Tin))
+ 
+kacc=60;
+klat=0.36;
+Vacc=(3*LL*LL+(HH-LL)*LL)*altezza;
+Vlat=2*(0.95*0.2+0.01*0.85)*altezza;
+keq=(kacc*Vacc+klat*Vlat)/(Vlat+Vacc);
+dx=1e-3;
+xx=(0:dx:HH)';
+nn=length(xx);
+upd=ones(nn,1);
+main=-2*ones(nn,1);
+downd=upd;
+bb=(qvol/keq*dx^2)*ones(nn,1);
+AA=spdiags([upd,main,downd],[1,0,-1],nn,nn);
+AA(1,1)=1+hout*dx/keq;
+AA(1,2)=-1;
+AA(end,end)=1+hin*dx/keq;
+AA(end,end-1)=-1;
+bb(1)=hout*dx/keq*Tout;
+bb(end)=hin*dx/keq*Tin;
+ 
+ 
+TTpt=AA\bb;
+ 
+qqptout=(hout*(TTpt(1)-Tout));
+qqptin=abs(hin*(TTpt(end)-Tin));
+figure(1)
+plot(xx,TTpt,'b','linewidth',3)
+hold on
+plot(xx,TT,'r','linewidth',3)
+xlabel('spazio [m]')
+ylabel('Temperatura[k]')
+legend('T con ponte termico','T senza ponte termico','location','bestout')
+title('Distribuzione di temperatura 1D')
+set(gca,'fontsize',16)
+ 
+figure(2)
+bar(qqptout)
+hold on
+bar(qqout)
+ylabel('flusso scambiato [W/m^2K]')
+legend('flusso con ponte termico','flusso senza ponte termico','location','bestout')
+ 
+ 
+ 
+psi1D=(qqptout-qqout)/(Tin-Tout);
+
+2D
+clear all
+close all
+clc
+ 
+Tin=20+273;
+Tout=5+273;
+hin=7.7;
+hout=25;
+LL=10e-3;
+HH=30e-2;
+altezza=4;
+ 
+ 
+klat=0.36;
+ 
+dx=1e-2;
+dy=1e-2;
+xvect=(0:dx:1)';
+nx=length(xvect);
+yvect=(0:dy:HH)';
+ny=length(yvect);
+ 
+ntot=nx*ny;
+AA=sparse([],[],[],ntot,ntot,5*ntot);
+bb=zeros(ntot,1);
+ 
+ 
+ 
+for ii=2:nx-1
+    for jj=2:ny-1
+        kc=(jj-1)*nx+ii;
+        AA(kc,kc)=2*(1/dy^2+1/dx^2);
+        AA(kc,kc+1)=-1/dx^2;
+        AA(kc,kc-1)=-1/dx^2;
+        AA(kc,kc+nx)=-1/dy^2;
+        AA(kc,kc-nx)=-1/dy^2;
+    end
+end
+ii=1;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+     AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc+1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ii=nx;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc-1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ 
+jj=1;
+for ii=2:nx-1
+    kc=ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hout/klat/dy);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+nx)=-2/dy^2;
+    AA(kc,kc+1)=-1/dx^2;
+    bb(kc)=2*hout/klat/dy*Tout;
+end
+ 
+jj=ny;
+for ii=2:nx-1
+    kc=nx*(ny-1)+ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hin/dy/klat);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+1)=-1/dx^2;
+    AA(kc,kc-nx)=-2/dy^2;
+    bb(kc)=2*hin/dy*Tin/klat;
+end
+ 
+kc=1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/klat);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hout/dy/klat*Tout;
+  
+ 
+kc=nx;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/klat);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hout/dy*Tout/klat;
+ 
+kc=ntot-nx+1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/klat/dx);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hin/dy*Tin/klat;
+ 
+kc=ntot;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/dy/klat);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hin/dx*Tin/klat;
+ 
+[X,Y]=meshgrid(xvect,yvect);
+ 
+TT=AA\bb;
+Tmatrix=reshape(TT,nx,ny);
+ 
+figure(1)
+surf(X,Y,Tmatrix')
+colorbar
+ 
+qq=trapz(xvect,hout*(TT(1:nx)-Tout));
+ 
+ 
+Tin=20+273;
+Tout=5+273;
+hin=7.7;
+hout=25;
+LL=10e-3;
+HH=30e-2;
+altezza=4;
+ 
+ 
+klat=0.36;
+kacc=60;
+ 
+dx=1e-2;
+dy=1e-2;
+xvect=(0:dx:1)';
+nx=length(xvect);
+yvect=(0:dy:HH)';
+ny=length(yvect);
+xvect1=(0:dx:5e-2)';
+nx1=length(xvect1);
+xvect2=(0:dx:15e-2)';
+nx2=length(xvect2);
+yvect1=(0:dy:20e-2)';
+ny1=length(yvect1);
+ 
+ 
+ntot=nx*ny;
+AA=sparse([],[],[],ntot,ntot,5*ntot);
+bb=zeros(ntot,1);
+ 
+ 
+ 
+for ii=2:nx-1
+    for jj=2:ny-1
+        kc=(jj-1)*nx+ii;
+        AA(kc,kc)=2*(1/dy^2+1/dx^2);
+        AA(kc,kc+1)=-1/dx^2;
+        AA(kc,kc-1)=-1/dx^2;
+        AA(kc,kc+nx)=-1/dy^2;
+        AA(kc,kc-nx)=-1/dy^2;
+    end
+end
+ii=1;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+     AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc+1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ii=nx;
+for jj=2:ny-1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=2*(1/dy^2+1/dx^2);
+    AA(kc,kc-1)=-2/dx^2;
+    AA(kc,kc+nx)=-1/dy^2;
+    AA(kc,kc-nx)=-1/dy^2;
+end
+ 
+jj=1;
+for ii=2:nx-1
+    kc=ii;
+    if ii<=nx1
+        kk=kacc;
+    else
+        kk=klat;
+    end
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hout/kk/dy);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+nx)=-2/dy^2;
+    AA(kc,kc+1)=-1/dx^2;
+    bb(kc)=2*hout/kk/dy*Tout;
+end
+ 
+jj=ny;
+for ii=2:nx-1
+    kc=nx*(ny-1)+ii;
+    if ii<=nx2
+        kk=kacc;
+    else
+        kk=klat;
+    end
+    AA(kc,kc)=2*(1/dy^2+1/dx^2+hin/dy/kk);
+    AA(kc,kc-1)=-1/dx^2;
+    AA(kc,kc+1)=-1/dx^2;
+    AA(kc,kc-nx)=-2/dy^2;
+    bb(kc)=2*hin/dy*Tin/kk;
+end
+ 
+ 
+%Interfaccia
+ii=nx1;
+for jj=2:ny1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=-(1/dx^2+klat/kacc/dx^2);
+    AA(kc,kc+1)=klat/kacc/dx^2;
+    AA(kc,kc-1)=1/dx^2;
+    AA(kc,kc+nx)=0;
+    AA(kc,kc-nx)=0;
+end
+ 
+ii=nx2;
+for jj=ny1+1:ny-1
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=-(1/dx^2+klat/kacc/dx^2);
+    AA(kc,kc+1)=klat/kacc/dx^2;
+    AA(kc,kc-1)=1/dx^2;
+    AA(kc,kc+nx)=0;
+    AA(kc,kc-nx)=0;
+end
+ 
+%Interfaccia orizzontale
+jj=ny1;
+for ii=nx1:nx2
+    kc=(jj-1)*nx+ii;
+    AA(kc,kc)=-klat/kacc/dx^2-1/dx^2;
+    AA(kc,kc+nx)=1/dx^2;
+    AA(kc,kc-nx)=klat/kacc/dx^2;
+    AA(kc,kc+1)=0;
+    AA(kc,kc-1)=0;
+end
+ 
+%Spigoli
+kc=1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/kacc);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hout/dy/kacc*Tout;
+  
+ 
+kc=nx;
+AA(kc,kc)=(1/dy^2+1/dx^2+hout/dy/klat);
+AA(kc,kc+nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hout/dy*Tout/klat;
+ 
+kc=ntot-nx+1;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/kacc/dx);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc+1)=-1/dx^2;
+bb(kc)=hin/dy*Tin/kacc;
+ 
+kc=ntot;
+AA(kc,kc)=(1/dy^2+1/dx^2+hin/dy/klat);
+AA(kc,kc-nx)=-1/dy^2;
+AA(kc,kc-1)=-1/dx^2;
+bb(kc)=hin/dx*Tin/klat;
+ 
+[X,Y]=meshgrid(xvect,yvect);
+ 
+TT=AA\bb;
+Tmatrix=reshape(TT,nx,ny);
+ 
+figure(2)
+surf(X,Y,Tmatrix')
+colorbar
+ 
+qqpt=trapz(xvect,hout*(TT(1:nx)-Tout));
+ 
+ 
+figure(3)
+bar(qqpt)
+hold on
+bar(qq)
+ylabel('flusso disperso W/m^2')
+
+psi2d=(qqpt-qq)/(Tin-Tout);
+
