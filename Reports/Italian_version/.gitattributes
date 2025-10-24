@@ -1,0 +1,20 @@
+# Let Git auto-detect text files and normalize them
+* text=auto
+
+# Treat common binary assets as binary (no text diffs or CRLF conversion)
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.pdf -text
+*.zip -text
+
+# For this project: mark Italian report markdown files for GitHub linguist (optional)
+Reports/Italian_version/*.md linguist-language=Italian
+
+# Keep shell/python scripts with LF endings (useful for CI/Unix)
+*.sh text eol=lf
+*.py text eol=lf
+
+# If you use Git LFS for large binaries, enable LFS filtering for PDFs (uncomment when using LFS)
+# *.pdf filter=lfs diff=lfs merge=lfs -text
