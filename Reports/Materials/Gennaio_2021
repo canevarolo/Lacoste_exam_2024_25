@@ -1,0 +1,205 @@
+Esame 29/01/21
+
+INTRODUZIONE
+
+Una sfera di cristallo è immersa in aria a temperatura ambiente, pari a 20°C. Supponiamo un volume d’aria sufficientemente grande da non subire variazioni nel tempo. È noto il coefficiente di scambio termico tra la sfera e l’aria circostante. Inizialmente poniamo la sfera ad una temperatura pari a quella dell’aria, consideriamo quindi un possibile transitorio precedente estinto.
+Improvvisamente all’interno della sfera viene immessa una potenza volumetrica che porta la sfera fino ad una temperatura di 1800 K, la sfera aumentando di temperatura non sarà più in equilibrio con l’ambiente circostante. A causa del gradiente di temperatura tra solido e aria, il processo di riscaldamento richiederà un tempo maggiore rispetto ad un caso con pareti adiabatiche, in quanto parte del calore immesso sarà ceduto all’ambiente.
+Il calore viene ceduto sia per convezione sia per irraggiamento, al fine di semplificare il termine di irraggiamento il corpo in esame viene considerato pari ad un corpo nero, ne consegue quindi un’emissività unitaria.
+Il problema richiede la conoscenza della sorgente volumetrica indotta in una condizione di stazionarietà, nella quale la temperatura esterna della sfera sia pari a 1800 K.
+La sfera è completamente immersa nel fluido, quindi la superficie di scambio risulta essere quella totale della sfera.
+
+Descrizione del problema
+Al fine di valutare l’evoluzione della temperatura di una sfera immersa in un fluido è necessario considerare un bilancio energetico. Il coefficiente di scambio termico conduttivo non dipende dalla temperatura ed è considerato costante. Considerando nulli i termini di advezione, in quanto il materiale, nonostante raggiunga temperature elevate, viene considerato con viscosità infinita.
+Vengono inoltre trascurate le dissipazioni viscose e le forze di pressione. Eliminati tali contributi otteniamo:
+[...]
+In questo caso dobbiamo utilizzare, considerata la geometria, il laplaciano in coordinate sferiche, ottenendo:
+
+[...]
+
+Per risolvere il problema si può utilizzare il metodo delle linee, nel quale viene discretizzato prima lo spazio e successivamente il tempo.
+Utilizzando il metodo delle differenze finite centrate, saremo in grado di ottenere un ordine di convergenza due, dalla discretizzazione otteniamo:
+
+[...]
+ 
+Per quanto riguarda la discretizzazione nel tempo viene utilizzato il metodo di Eulero implicito, tale metodo, nonostante richieda l’utilizzo del comando \ invece di una moltiplicazione e quindi un maggiore costo computazionale, risulta essere stabile per qualsiasi valore del parametro di discretizzazione.
+ 
+[...]
+
+Dove n rappresenta l’indice nel tempo e i l’indice nello spazio.
+A questo punto portando a sinistra tutti i termini al tempo n+1 possiamo creare la matrice dei coefficienti, una matrice che sarà creata con il comando spdiags in modo da ottenere una matrice sparsa, essa essendo costruita solo per lo spazio sarà formata da sole tre diagonali.
+
+[...]
+
+Dove 𝛼 è pari a k/ 𝜌𝑐𝑝.
+Il termine noto risulta essere:
+ 
+[...]
+
+Definiamo un dominio computazionale dividendo la lunghezza del raggio in un numero sufficiente di nodi al fine di avere una buona approssimazione dell’andamento della temperatura, ma senza incombere nell’errore di arrotondamento di macchina.
+Le diagonali della matrice dipendono dal vettore rr, data questa dipendenza, è necessario utilizzare degli elementi fittizi nel costruire la matrice, così da avere lo stesso numero di elementi nelle tre diagonali.
+aa=alpha*dt/dr;
+upd=[0;aa*(-1./rr(1:end-1)-1/dr)]; main=(-2*aa/dr+1)*ones(nn,1); downd=[aa*(1./rr(2:end)-1/dr);0];
+AA=spdiags([upd,main,downd],[1,0,-1],nn,nn);
+AA(1,1)=1;
+AA(1,2)=-1;
+ 
+Condizioni al contorno
+Lungo il raggio abbiamo al centro della sfera per r=0, una condizione di adiabaticità, cioè un flusso imposto nullo, mentre sulla superficie esterna della sfera abbiamo un flusso convettivo e di irraggiamento, l’irraggiamento, dovuto alla differenza di temperatura, presenta una criticità nel problema, in quanto il flusso dipende dalla temperatura alla quarta potenza e questo impone una condizione di non linearità. Al fine di semplificare il problema e rimuovere la non linearità scomponiamo il termine di irraggiamento per raccogliere in un termine di scambio termico la non linearità e rendere quindi il problema risolvibile con il metodo diretto \ .
+Una volta creata la matrice dobbiamo imporre le condizioni al contorno. La condizione di adiabaticità può essere definita al di fuori del ciclo temporale in quanto i termini non dipendono dalla temperatura, il termine di bordo che contiene le informazioni di convezione ed irraggiamento dipende dalla temperatura e quindi deve essere aggiornato nel tempo, per questo motivo deve essere necessariamente imposto all’interno del ciclo temporale.
+Il vettore dei termini noti deve necessariamente essere imposto all’interno del ciclo temporale in quanto contiene il termine della temperatura all’iterazione precedente.
+Ciclo transitorio
+Conoscendo la temperatura iniziale, posta pari alla temperatura dell’aria, e avendo costruito la matrice dei coefficienti, la quale non dipende dal tempo, siamo ora in grado di avanzare nel tempo con un passo di tempo a nostra discrezione scelto in modo da poter valutare l’evoluzione della temperatura in modo sufficientemente preciso.
+Non conoscendo il tempo al quale la temperatura raggiunga quella richiesta sarà necessario operare tramite un ciclo while, imponendo come condizione di uscita dal ciclo il raggiungimento di tale richiesta. Per evitare che il ciclo non si chiuda mai in caso di errore è opportuno imporre un’ulteriore condizione di uscita dal ciclo in base al numero di iterazioni, se il ciclo si esaurisce quando il numero di iterazioni è pari al numero massimo che abbiamo imposto è possibile che ci sia un errore, oppure che il parametro di discretizzazione temporale scelto sia eccessivamente piccolo e che quindi il ciclo stia impiegando molti più cicli rispetto a quelli previsti.
+
+Flusso scambiato
+Il flusso scambiato in condizioni stazionarie deve essere tale per cui la temperatura sia costante, una condizione di questo tipo è difficilmente raggiungibile per un problema reale, in quanto i parametri ambientali sono soggetti ad ampie variazioni durante il giorno, ma per periodi limitati di tempo è possibile raggiungere un condizione di equilibrio, tale condizione richiede che l’apporto di calore sia pari a quello ceduto, per questo motivo al fine di valutare l’apporto fornito alla sfera dalla potenza volumetrica, è sufficiente eseguire un’uguaglianza.
+Conoscendo la temperatura finale sulla superficie esterna della sfera è possibile valutare il flusso scambiato per convezione ed irraggiamento, tali flussi sono, in condizioni stazionarie, pari al flusso generato dal mago Saruman.
+
+[...]
+
+Dove h è il coefficiente di scambio termico convettivo, ơ rappresenta la costante di Boltzman pari a 5.67e-8 e ɛ l’emissività, che come abbiamo già detto è considerata unitaria.
+La moltiplicazione per l’area di scambio Asc=4*pi*r^2 e la divisione per il volume Vol=4/3*pi*r^3 è necessaria al fine di avere dei W/m^3 unità di misura della potenza volumetrica.
+La potenza scambiata per convezione risulta nel tempo essere molto meno rilevante rispetto alla potenza scambiata per irraggiamento, questo è consono con le formule descritte precedentemente.
+Analizzando solo la potenza convettiva notiamo che essa risulta avere un andamento corretto e simile a quello della potenza scambiata per irraggiamento.
+Risoluzione del problema transitorio
+Nota la potenza volumetrica siamo ora in grado di svolgere il ciclo while nel tempo partendo dalla temperatura iniziale e arrivando a stazionario. Per verificare che la temperatura raggiunta sia corretta è opportuno imporre come condizione di uscita dal ciclo l’errore sulla temperatura e segnalare con un warning se la differenza tra la temperatura di uscita dal ciclo presenta sull’ultimo nodo una temperatura diversa da quella indicata, al fine di considerare un errore dovuto alla discretizzazione ed all’errore di macchina, tale warning dovrà essere segnalato se la differenza tra le due temperature fosse minore di una certa tolleranza.
+Imponendo la condizione iniziale fuori dal ciclo, definendo la condizione al contorno della matrice AA dipendente dalla temperatura, definendo il termine noto e le condizioni al contorno su di esso siamo in grado di valutare la temperatura ad ogni istante di tempo considerato, essa diventerà la distribuzione da cui partire all’iterazione successiva.
+La temperatura risulta massima al centro della sfera coerentemente con la condizione di adiabaticità imposta, la temperatura sulla superficie raggiunge invece il valore richiesto affinché si esaurisca il transitorio.
+ 
+Temperatura massima e sulla superficie
+Ad ogni iterazione all’interno del ciclo while è possibile salvare in un vettore lungo quanto il vettore del tempo, un valore pari al valore massimo del vettore della temperatura a quell’istante. La stessa cosa si può fare salvando in valore della temperatura nell’ultimo nodo, Tsupvett(jj)=TT(end).
+Dove jj rappresenta l’indice di avanzamento nel ciclo temporale ed end rappresenta la posizione sulla superficie esterna.
+Al fine di valutare l’accuratezza con la quale sto valutando l’evoluzione di tali temperature posso variare i parametri di discretizzazione. Sarebbe sufficiente variare il parametro di discretizzazione temporale ma essendo l’errore dipendente da entrambi i parametri e la tolleranza richiesta abbastanza ridotta, è consigliabile valutare una convergenza temporale per diversi parametri di discretizzazione spaziale dr.
+
+L’evoluzione delle temperature rispecchia ciò che ci saremmo aspettati, la temperatura superficiale raggiunge la temperatura desiderata e la temperatura massima, che come è possibile verificare guardando i valori del vettore TT si trova al centro della sfera, raggiunge valori più elevati. Dopo circa 200 secondi si nota un drastico calo nell’aumento delle temperature, questo è dovuto al fatto che all’aumentare della temperatura superficiale, lo scambio con l’esterno diventerà sempre maggiore, fino al momento in la potenza assorbita sarà pari a quella ceduta, si arriva quindi ad un asintoto orizzontale, il quale si interrompe quando il risultato è sufficientemente preciso. Si può notare come aumentando la tolleranza già dopo 300 secondi si può ottenere un risultato simile a quello richiesto.
+Per conoscere l’accuratezza con la quale viene svolto il calcolo dell’evoluzione della temperatura è necessario valutare tale distribuzione per diversi parametri di discretizzazione, prendendo il
+parametro più piccolo come soluzione più raffinata si può eseguire uno studio dell’errore rispetto a tale parametro.
+
+
+Modello 0D
+A seconda delle dimensioni dell’oggetto e della rilevanza della conduzione rispetto alla convezione è possibile approssimare un oggetto tridimensionale ad un singolo punto. Per verificare se tale approssimazione possa essere accettabile è opportuno valutare il numero adimensionale di Biot, il quale è definito come:
+[...]
+Lc rappresenta la lunghezza caratteristica, in questo caso il diametro.
+Se il valore risulta essere molto minore di uno si può considerare l’oggetto come tutto alla stessa temperatura, in quanto la conduzione risulta essere molto più rapida della convezione.
+In questo caso è chiaro che non si possa valutare la distribuzione di temperatura nello spazio, si valuterà una singola temperatura rappresentativa di tutto l’oggetto in un determinato istante di tempo.
+L’equazione che rappresenta questo tipo di problema è:
+[...]
+Definendo la costante di tempo tau come:
+[...]
+È possibile avere un’indicazione del passo di tempo da considerare.
+
+Risoluzione modello 0D
+Come proposto per il modello 1D, anche in questo caso la formulazione di Eulero implicita risulta essere la scelta più sicura.
+[...]
+Iterativamente nel tempo è possibile da una condizione iniziale trovare la nuova temperatura per ogni istante considerato. Essendo Tnew un singolo valore e non un vettore come in precedenza è
+possibile salvare il suo valore ad ogni passaggio del ciclo, sarà quindi semplice fare un grafico dell’evoluzione di tale temperatura nel tempo.
+Come per il caso 1D, anche in questo caso bisogna considerare la non linearità portata dal termine di irraggiamento.
+La distribuzione di temperatura nel tempo risulta concorde a ciò che ci aspettavamo considerato il caso 1D, le temperature risultano diverse rispetto alla temperatura massima in quanto l’approssimazione 0D considera solamente una temperatura rappresentativa dell’oggetto e non presenta quindi una distribuzione nello spazio, per questo motivo la temperatura massima risulta avere valori superiori.
+
+Studio dell’indipendenza temporale
+Dopo aver valutato la distribuzione di temperatura è opportuno valutare l’errore commesso a seconda del parametro di discretizzazione scelto. La scelta del parametro infatti non deve essere la più piccola possibile, perché in quel caso si rischia di aumentare il costo computazionale dell’algoritmo e di incorrere in errori dovuti al calcolatore, è opportuno scegliere un parametro tale da avere un errore sufficientemente piccolo a seconda dell’accuratezza richiesta dal problema.
+Al variare del parametro dt di valuta quindi l’evoluzione della temperatura e l’errore rispetto a quella più raffinata.
+ 
+
+
+SCRIPT
+clear all close all clc
+%dati Ta=20+273;
+hh=10; Tsup=1800; dd=2e-1; rout=dd/2; sigma=5.67e-8; emissivita=1; toll=1e-4;
+kk=80; rho=25e2; cp=795;
+Asc=4*pi*rout^2; Vol=4/3*pi*rout^3;
+alpha=kk/rho/cp;
+%Mesh dr=1e-3;
+ 
+rr=(0:dr:rout)'; nn=length(rr);
+dt=10;
+%Matrice aa=alpha*dt/dr;
+upd=[0;aa*(-1./rr(1:end-1)-1/dr)]; main=(2*aa/dr+1)*ones(nn,1); downd=[aa*(1./rr(2:end)-1/dr);0];
+AA=spdiags([upd,main,downd],[1,0,-1],nn,nn);
+AA(1,1)=1;
+AA(1,2)=-1;
+Told=Ta*ones(nn,1);
+%Flusso in caso stazionario
+qvol=sigma*Asc/Vol*(Tsup^4-Ta^4)+hh*Asc/Vol*(Tsup-Ta);
+%Ciclo transitorio time=0;
+jj=1; nmax=1e4; Tmax(jj)=Ta;
+Tsuperfice(jj)=Ta; qconv(jj)=0; qirr(jj)=0; err=toll+1;
+while (err>toll && jj<nmax) jj=jj+1; bb=Told+qvol/rho/cp*dt;
+hcorretto=hh+sigma*(Told(end)+Ta)*(Told(end)^2+Ta^2); AA(end,end)=(1+hcorretto*dr/kk);
+AA(end,end-1)=-1; bb(1)=0;
+bb(end)=hcorretto*dr/kk*Ta; TT=AA\bb; Tmax(jj,1)=max(TT); Tsuperficie(jj,1)=TT(end);
+qconv(jj)=hh*(Tsuperficie(jj)-Ta); qirr(jj)=sigma*(Tsuperficie(jj)^4-Ta^4);
+err=abs(Tmax(jj)-Tmax(jj-1))/abs(Tmax(jj)-Ta); Told=TT;
+time=time+dt;
+end
+ 
+tt=(0:dt:time)'; figure(1)
+plot(tt,Tmax,'b','linewidth',2) hold on
+plot(tt,Tsuperficie,'r','linewidth',2) grid on
+box on xlabel('Tempo[s]') ylabel('Temperatura[K]')
+legend('T massima','T superficie','location','bestout') title('Temperatura nel tempo')
+figure(5) plot(rr,TT,'linewidth',3) grid on
+box on xlabel('Tempo[s]') ylabel('Temperatura[K]')
+title('Temperatura nello spazio a stazionario')
+
+set(gca,'fontsize',16)
+figure(2) plot(tt,qconv,'b','linewidth',3) hold on plot(tt,qirr,'r','linewidth',3) grid on
+box on xlabel('Tempo[s]') ylabel('Potenza[W/m^2]')
+legend('q convezione','q irraggiamento','location','bestout') title('Potenza scambiata nel tempo')
+figure(3) plot(tt,qconv,'b','linewidth',3) grid on
+box on xlabel('Tempo[s]') ylabel('Potenza[W/m^2]')
+title('Potenza convettiva scambiata nel tempo') set(gca,'fontsize',16)
+%MODELLO 0D
+Bi=hh*dd/kk; tau=rho*cp*Vol/(hh*Asc);
+ 
+time0D=0; dt=10;
+
+tol=1e-4; err=tol+1; pp=1; nitermax=1e4;
+Told0D=Ta;
+Tnew0D(pp)=Ta;
+while err>tol && pp<nitermax
+pp=pp+1; time0D=time0D+dt;
+
+coeff=hh*Asc/Vol+sigma*Asc/Vol*(Ta^2+Told0D^2)*(Ta+Told0D);
+
+Tnew0D(pp)=(qvol*dt/rho/cp+coeff*dt*Ta/rho/cp+Told0D)/(1+coef f*dt/rho/cp);
+
+
+
+ 
+
+
+
+
+
+end
+ 
+err=abs(Tnew0D(pp)-Told0D)/abs(Tnew0D(pp)-Ta);
+%aggiorno Told0D=Tnew0D(pp);
+ 
+tt0D=(0:dt:time0D)'; figure(4)
+plot(tt0D,Tnew0D,'linewidth',3) grid on
+xlabel('Tempo[s]') ylabel('Temperatura[K]') set(gca,'fontsize',16) title('Distribuzione di temperatura 0D')
+
+dtvect=[1e-4 1e-3 1e-2 1e-1 1 10 1e3]; mm=length(dtvect);
+tend=tt0D(end) for jj=1:mm
+dt=dtvect(jj); tt0D=[0:dt:tend]; ff=length(tt0D);
+ 
+%condizioni iniziali Told0D=Ta; Tnew0D=Ta; Tmax0D(1)=Ta;
+for ii=2:ff
+coeff=hh*Asc/Vol+sigma*Asc/Vol*(Ta^2+Told0D^2)*(Ta+Told0D); Tnew0D=(qvol*dt/rho/cp+coeff*dt*Ta/rho/cp+Told0D)/(1+coeff*dt
+/rho/cp);
+Tmax0D(ii)=Tnew0D;
+%aggiorno Told0D=Tnew0D;
+end
+if jj==1
+err(jj)=0;
+Tref=Tnew0D;
+else
+err(jj)=norm(Tref-Tnew0D)/norm(Tref-Ta);
+end
+end
+figure(6)
+loglog(dtvect,err,'b-o','linewidth',2) grid on
+xlabel('dt[s]') ylabel('Errore relativo')
+title('Studio di indipendenza temporale') set(gca,'fontsize',13)
